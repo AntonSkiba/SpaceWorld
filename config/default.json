@@ -1,0 +1,4 @@
+{
+	"port": 5000,
+	"mongoUri": "mongodb+srv://skiba:skiba1234@spaceworld.ewm4j.mongodb.net/app?retryWrites=true&w=majority"
+}

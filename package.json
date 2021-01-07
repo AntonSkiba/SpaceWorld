@@ -1,0 +1,32 @@
+{
+  "name": "spaceworld",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "server": "nodemon app.js",
+    "client": "npm run start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AntonSkiba/SpaceWorld.git"
+  },
+  "author": "Skiba",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AntonSkiba/SpaceWorld/issues"
+  },
+  "homepage": "https://github.com/AntonSkiba/SpaceWorld#readme",
+  "dependencies": {
+    "config": "^3.3.3",
+    "express": "^4.17.1",
+    "express-validator": "^6.9.2",
+    "mongoose": "^5.11.10"
+  },
+  "devDependencies": {
+    "concurrently": "^5.3.0",
+    "nodemon": "^2.0.7"
+  }
+}
