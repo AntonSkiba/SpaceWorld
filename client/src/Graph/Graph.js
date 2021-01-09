@@ -1,23 +1,38 @@
 import React, { Component } from 'react';
-import ContextMenu from './ContextMenu/ContextMenu';
 import './Graph.css';
 
+import ContextMenu from './ContextMenu/ContextMenu';
+// import {LoadShape} from './helpers/LoadShape';
+import ShapeDialog from './ShapeDialog/ShapeDialog';
 
+/**
+ * Основной компонент графа
+ */
 
 class Graph extends Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			showMenu: false
+			showMenu: false,
+			shape: null
 		}
+
+		this._onLoadShape = this._onLoadShape.bind(this);
+	}
+
+	_onLoadShape(e) {
+		// LoadShape(e.target.files[0]);
+		this._toggleContextMenu.call(this, false, e);
+		this.setState({
+			shape: e.target.files[0]
+		});
 	}
 
 	_toggleContextMenu(showMenu, e) {
-		e.preventDefault();
+		e?.preventDefault();
 
-		if(this.state.showMenu !== showMenu) {
-			console.log(showMenu);
+		if (this.state.showMenu !== showMenu && !this.state.shape) {
 			this.setState({
 				showMenu
 			});
@@ -32,7 +47,10 @@ class Graph extends Component {
 				onContextMenu={this._toggleContextMenu.bind(this, true)}>
 				{this.state.showMenu && 
 				<ContextMenu
-					onBlur={this._toggleContextMenu.bind(this, false)}/>}
+					onLoadShape={this._onLoadShape}
+					onClose={this._toggleContextMenu.bind(this, false)}/>}
+				{this.state.shape &&
+				<ShapeDialog shape={this.state.shape}/>}
 			</div>
 		);
 	}

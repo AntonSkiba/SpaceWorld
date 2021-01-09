@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const app = express();
 
-app.use('/api/upload', require('./routes/upload.routes'));
+app.use('/api/shape', require('./routes/shape.routes'));
 
 const PORT = config.get('port') || 5000;
 

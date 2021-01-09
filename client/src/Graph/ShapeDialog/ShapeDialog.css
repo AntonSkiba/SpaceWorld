@@ -1,0 +1,56 @@
+.shapeDialog-content {
+	width: 800px;
+	height: 600px;
+	background-color: #ffffff;
+	display: flex;
+	flex-direction: column;
+	background-color: #404040;
+	padding: 8px;
+}
+
+.shapeDialog-overlay {
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.shapeDialog-overlay:focus {
+	outline: none;
+}
+
+.shapeDialog-main {
+	display: flex;
+	height: 100%;
+}
+
+.shapeDialog-main__view {
+	width: 550px;
+}
+
+/* .shapeDialog-header {
+	
+} */
+
+.shapeDialog-header__name {
+	width: 100%;
+	text-align: center;
+	border: 0;
+	border-bottom: 2px solid black;
+	font-size: 28px;
+	font-weight: bold;
+	background-color: inherit;
+	transition: 0.5s ease;
+	padding: 5px 0;
+}
+
+/* shine-effect мб добавлю, а пока так */
+.shapeDialog-header__name:hover {
+	cursor: pointer;
+	background-color: #555555;
+}
+
+.shapeDialog-header__name:focus {
+	border: 0;
+	border-bottom: 2px solid black;
+	outline: none;
+	cursor: text;
+	background-color: #555555;
+}
