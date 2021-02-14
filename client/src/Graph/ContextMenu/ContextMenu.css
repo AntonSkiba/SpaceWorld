@@ -1,6 +1,14 @@
-/* .contextMenu {
-	display: flex;
-	flex-direction: column;
+.contextMenu-overlay {
 	position: absolute;
-	background-color: #e0e7ff;
-} */
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	z-index: 10;
+}
+
+.contextMenu {
+	position: absolute;
+	background: rgba(16, 25, 59, 0.8);
+	border-radius: 5px;
+}

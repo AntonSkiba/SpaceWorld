@@ -1,0 +1,30 @@
+.file-container {
+	margin: 5px;
+	display: flex;
+}
+
+.file-input {
+	display: none;
+}
+
+.file {
+	padding: 7px 10px 5px 10px;
+	border-radius: 5px;
+	background-color: rgba(255, 255, 255, 0.2);
+	cursor: pointer;
+	transition: 0.2s ease;
+	font-size: 20px;
+	color: white;
+	width: 100%;
+	display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file:active {
+	transform: scale(0.9);
+}
+
+.file:hover {
+	background-color: rgba(255, 255, 255, 0.4);
+}

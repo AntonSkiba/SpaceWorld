@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 
 const app = express();
 
+app.use(express.json({limit: '300mb', extended: true }));
+app.use(express.urlencoded({limit: '300mb', extended: true}));
+
 app.use('/api/shape', require('./routes/shape.routes'));
 
 const PORT = config.get('port') || 5000;

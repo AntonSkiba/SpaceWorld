@@ -1,0 +1,39 @@
+.number-container {
+	height: 28px;
+	background-color: rgba(0, 0, 0, 0.2);
+	color: white;
+	margin: 10px;
+	transition: 0.2s ease;
+	font-size: 20px;
+	border-radius: 5px;
+	padding: 7px 10px 5px 10px;
+	display: flex;
+	align-items: baseline;
+}
+
+.number {
+	background: none;
+	border: none;
+	outline: none;
+    width: 100%;
+	color: white;
+	font-size: 20px;
+	margin-left: 4px;
+}
+
+.number:focus {
+	border: none;
+	outline: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+.number::-webkit-outer-spin-button,
+.number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.number {
+  -moz-appearance: textfield;
+}

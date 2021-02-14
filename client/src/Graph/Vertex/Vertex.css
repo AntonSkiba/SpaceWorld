@@ -1,0 +1,9 @@
+.vertex {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	user-select: none;
+	border-radius: 50%;
+	cursor: pointer;
+}

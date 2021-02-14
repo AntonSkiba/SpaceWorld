@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './ContextMenu.css';
 
-import Popup from "reactjs-popup";
+import InputFile from '../../Components/Buttons/File/File';
 
 /**
  * Контекстное меню right-click, позволяет выбрать файл
@@ -12,55 +12,70 @@ class ContextMenu extends Component {
 		super(props);
 
 		this.state = {
-			width: 250,
-			height: 400
+			width: this.props.width,
+			height: this.props.height
 		}
 
-		//this._checkFocus = this._checkFocus.bind(this);
+		if (this.props.animation) {
+			this.animation = {
+				show: {
+					transform: 'translate(0px, 0px) scale(1)',
+					opacity: 1
+				},
+				close: {
+					transform: `translate(${-this.props.width/2}px, ${-this.props.height/2}px) scale(0)`,
+					opacity: 1
+				},
+				time: {
+					duration: this.props.animation.time,
+					easing: 'ease-in-out',
+					fill: 'both'
+				}
+			}
+		}
+
+		this._checkClosing = this._checkClosing.bind(this);
 	}
 
-	// componentDidMount() {
-	// 	document.addEventListener('click', this._checkFocus)
-	// }
+	componentDidMount() {
+		if (this.animation) {
+			this.popup.animate([this.animation.close, this.animation.show], this.animation.time);
+		}
+	}
 
-	// componentWillUnmount() {
-	// 	document.removeEventListener('click', this._checkFocus);
-	// }
-
-	// _checkFocus(e) {
-	// 	const leftFace = this.state.left;
-	// 	const rightFace = this.state.left + this.state.width;
-	// 	const topFace = this.state.top;
-	// 	const bottomFace = this.state.top + this.state.height;
-	// 	if (e.clientX < leftFace || e.clientX > rightFace || e.clientY < topFace || e.clientY > bottomFace) {
-	// 		this.props.onBlur(e);
-	// 	}
-	// }
+	_checkClosing(e) {
+		if (e.target.className === 'contextMenu-overlay') {
+			if (this.animation) {
+				this.popup.animate([{transform: 'scale(1)'}, {transform: 'scale(0)'}], this.animation.time);
+				setTimeout(() => {
+					this.props.onClose(e);
+				}, this.animation.time.duration)
+			} else {
+				this.props.onClose(e);
+			}
+		}
+	}
 
 	render() {
-		console.log(window.event.offsetX);
-		const positionStyle = {
-			position: 'absolute',
+		const contentStyle = {
 			width: this.state.width,
 			height: this.state.height,
-			top: window.event.offsetY,
-			left: window.event.offsetX
+			transition: '0.2s ease',
+			top: this.props.top,
+			left: this.props.left,
 		};
 
-		const overlayStyle = { background: 'none' };
-
 		return (
-			<Popup
-				contentStyle={positionStyle}
-				open={true}
-				onClose={this.props.onClose}
-				overlayStyle={overlayStyle}>
-                <input 
-					name="myFile" 
-					type="file"
-					accept=".obj"
-					onChange={this.props.onLoadShape}></input>
-            </Popup>
+			<div className="contextMenu-overlay" onClick={this._checkClosing}>
+				<div
+					style={contentStyle}
+					className="contextMenu"
+					ref={(popup) => { this.popup = popup; }}>
+					
+					<InputFile caption="Upload 3D model" onChange={this.props.onLoadShape} />
+				</div>
+			</div>
+			
 		);
 	}
 }

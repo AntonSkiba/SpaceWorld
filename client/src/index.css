@@ -1,3 +1,7 @@
+* {
+  font-family: 'Arimo', sans-serif;
+}
+
 body, html, #root {
   margin: 0;
   height: 100%;

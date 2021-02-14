@@ -1,0 +1,27 @@
+.switch-container {
+	display: flex;
+	margin: 10px;
+}
+
+.switch {
+	border: none;
+	outline: none;
+	padding: 7px 10px 5px 10px;
+	background-color: rgba(0, 0, 0, 0.2);
+	color: white;
+	font-size: 20px;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: 0.2s ease;
+	height: 40px;
+	width: 100%;
+}
+
+.switch:active {
+	transform: scale(0.9);
+}
+
+.switch:focus {
+	border: none;
+	outline: none;
+}

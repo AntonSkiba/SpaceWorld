@@ -1,0 +1,37 @@
+.simple-container {
+	display: flex;
+	margin: 5px;
+    width: 100%;
+}
+
+.simple {
+	border: none;
+	outline: none;
+	padding: 7px 10px 5px 10px;
+	background-color: rgba(0, 0, 0, 0.2);
+	color: white;
+	font-size: 20px;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: 0.2s ease;
+	height: 40px;
+	width: 100%;
+}
+
+.simple:active {
+	transform: scale(0.9);
+}
+
+.simple-default:hover {
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.simple-glow:hover {
+	background-color: rgba(0, 0, 0, 0.4);
+	filter: saturate(500%);
+}
+
+.simple:focus {
+	border: none;
+	outline: none;
+}

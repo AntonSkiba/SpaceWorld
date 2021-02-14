@@ -1,0 +1,21 @@
+.menu {
+	display: flex;
+	flex-direction: column;
+}
+
+.menu-body {
+	height: 100%;
+}
+
+.menu-footer {
+	display: flex;
+	margin: 5px;
+}
+
+.menu-footer__item-image {
+	width: 20px;
+    height: 20px;
+	background-repeat: no-repeat;
+	background-size: cover;
+	margin: auto;
+}

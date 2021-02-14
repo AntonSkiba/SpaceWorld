@@ -1,48 +1,107 @@
-const {Router} = require('express');
-const fs = require('fs');
-const path = require('path');
-const Shape = require('../models/Shape');
+const { Router } = require("express");
+const fs = require("fs");
+const Shape = require("../models/Shape");
 const multer = require('multer');
 const router = Router();
-const {v4: uuid} = require('uuid');
 
 const upload = multer();
-router.post('/upload', upload.single('shape'), async (req, res) => {
-	try {
-		const shapeId = uuid();
 
-		// сохраняем файл на сервере
-		fs.mkdir(`./shapes/${shapeId}`, (folderErr) => {
-			if (folderErr) {
-				return res.status(500).json({message: 'Ошибка сервера: не удалось создать папку для объекта'});
-			}
+router.post("/upload", (req, res) => {
+    console.log('Method: /upload');
+    const { name, screenshot, settings, path } = req.body;
+    if (!name) {
+        return res.status(400).json({ message: "Отсутствует имя" });
+    }
 
-			fs.writeFile(`./shapes/${shapeId}/${req.file.originalname}`, req.file.buffer, (err) => {
-				if (err) {
-					return res.status(500).json({message: 'Ошибка сервера: не удалось сохранить объект'});
-				}
-				
-				// отправляем ссылку для загрузки объекта
-				res.status(201).json({
-					message: 'Объект сохранен',
-					link: `${shapeId}&&${req.file.originalname}`
-				});
-			});
-		})
+    if (!screenshot) {
+        return res.status(400).json({ message: "Отсутствует фоновое изображение" });
+    }
 
-		// const shape = new Shape({name, uri: '/shapes/shape1'});
+    if (!settings) {
+        return res.status(400).json({ message: "Отсутствуют настройки объекта" });
+    }
 
-		// await shape.save();
-		
+    settings.name = name;
 
-	} catch (error) {
-		res.status(500).json({message: 'Ошибка сервера: не удалось загрузить объект'});
-	}
+    // если нету пути, значит пришел новый объект, иначе просто запишем обновляемый конфиг
+    if (!path) {
+        let dirs = name.split('/');
+        dirs = dirs.filter(dir => !!dir.length && dir !== '..');
+        dirs.pop();
+        dirs.push(`shape_${Date.now()}`);
+    
+        makeDirs('./shapes/configs', dirs).then(genPath => {
+            console.log(genPath);
+            writeConfigs(res, genPath, settings, screenshot);
+        });
+    } else {
+        writeConfigs(res, `./shapes/configs${path}`, settings, screenshot);
+    }
 });
 
-router.get('/load/:shapePath', (req, res) => {
-	const shapePath = req.params.shapePath.replace('&&', '/');
-	res.sendFile(path.join(__dirname, '..', 'shapes', shapePath));
+function writeConfigs(res, path, settings, screenshot) {
+    // Сохраняем настройки модели
+    fs.writeFile(`${path}/settings.json`, JSON.stringify(settings, null, 2),"utf8",(err) => {
+        if (err) return fileError(res, err);
+        
+        // Сохраняем фоновое изображение
+        const image = screenshot.replace(/^data:image\/png;base64,/, "");
+        fs.writeFile(`${path}/screenshot.png`, image, "base64", (err) => {
+            if (err) return fileError(res, err);
+
+            res.status(201).json({
+                message: "Объект сохранен",
+                path: path.replace('./shapes/configs', '')
+            });
+        });
+    });
+}
+
+function makeDirs(tempPath, dirs) {
+    return new Promise((resolve, reject) => {
+        fs.readdir(tempPath, readErr => {
+            const recursiveCall = () => {
+                if (dirs.length) {
+                    const tempDir = dirs.shift();
+                    resolve(makeDirs(`${tempPath}/${tempDir}`, dirs));
+                }
+                resolve(tempPath);
+            }
+    
+            if (readErr) {
+                fs.mkdir(tempPath, makeErr => {
+                    if (makeErr) {
+                        reject(fileError(res, makeErr));
+                    } else {
+                        recursiveCall();
+                    }
+                });
+            } else {
+                recursiveCall();
+            }
+        });
+    }) 
+}
+
+router.post("/saveFile", upload.single('shape'), (req, res) => {
+    console.log('Method: /saveFile');
+    const shapeId = Date.now();
+    const ext = req.file.originalname.split('.').pop();
+    
+    const link = `object_${shapeId}.${ext}`;
+    fs.writeFile(`./shapes/files/${link}`, req.file.buffer, (err) => {
+        if (err) return fileError(res, err);
+
+        res.status(201).json({
+            message: "Файл сохранен",
+            link
+        });
+    });
 });
+
+function fileError(res, err) {
+	console.error(err);
+    return res.status(500).json({error: "Не удалось загрузить приложение, попробуйте позже"});
+}
 
 module.exports = router;
