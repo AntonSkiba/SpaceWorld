@@ -1,14 +1,14 @@
 .simple-container {
-	display: flex;
 	margin: 5px;
-    width: 100%;
+	display: flex;
+	width: calc(100% - 10px);
 }
 
 .simple {
 	border: none;
 	outline: none;
 	padding: 7px 10px 5px 10px;
-	background-color: rgba(0, 0, 0, 0.2);
+	background-color: rgba(255, 255, 255, 0.2);
 	color: white;
 	font-size: 20px;
 	border-radius: 5px;
@@ -22,8 +22,12 @@
 	transform: scale(0.9);
 }
 
+.simple-glow {
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
 .simple-default:hover {
-	background-color: rgba(0, 0, 0, 0.4);
+	background-color: rgba(255, 255, 255, 0.4);
 }
 
 .simple-glow:hover {

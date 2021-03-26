@@ -30,12 +30,12 @@ router.post("/upload", (req, res) => {
         dirs.pop();
         dirs.push(`shape_${Date.now()}`);
     
-        makeDirs('./shapes/configs', dirs).then(genPath => {
+        makeDirs('../SpaceWorldData/Shapes/configs', dirs).then(genPath => {
             console.log(genPath);
             writeConfigs(res, genPath, settings, screenshot);
         });
     } else {
-        writeConfigs(res, `./shapes/configs${path}`, settings, screenshot);
+        writeConfigs(res, `../SpaceWorldData/Shapes/configs${path}`, settings, screenshot);
     }
 });
 
@@ -51,7 +51,7 @@ function writeConfigs(res, path, settings, screenshot) {
 
             res.status(201).json({
                 message: "Объект сохранен",
-                path: path.replace('./shapes/configs', '')
+                path: path.replace('../SpaceWorldData/Shapes/configs', '')
             });
         });
     });
@@ -89,7 +89,7 @@ router.post("/saveFile", upload.single('shape'), (req, res) => {
     const ext = req.file.originalname.split('.').pop();
     
     const link = `object_${shapeId}.${ext}`;
-    fs.writeFile(`./shapes/files/${link}`, req.file.buffer, (err) => {
+    fs.writeFile(`../SpaceWorldData/Shapes/files/${link}`, req.file.buffer, (err) => {
         if (err) return fileError(res, err);
 
         res.status(201).json({

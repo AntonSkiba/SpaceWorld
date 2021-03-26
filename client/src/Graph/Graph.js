@@ -42,10 +42,11 @@ class Graph extends Component {
                 },
             ],
 
-            loadedShape: null,
+            loadedShape: null, // can be file, threejs Group, 'space'
         };
 
         this._onLoadShape = this._onLoadShape.bind(this);
+        this._onCreateSpace = this._onCreateSpace.bind(this);
         this._shapeDialogClosed = this._shapeDialogClosed.bind(this);
     }
 
@@ -53,6 +54,13 @@ class Graph extends Component {
         this._toggleContextMenu.call(this, false, e);
         this.setState({
             loadedShape: e.target.files[0],
+        });
+    }
+
+    _onCreateSpace(e) {
+        this._toggleContextMenu.call(this, false, e);
+        this.setState({
+            loadedShape: 'space'
         });
     }
 
@@ -173,6 +181,7 @@ class Graph extends Component {
                         width={this.state.menu.width}
                         height={this.state.menu.height}
                         onLoadShape={this._onLoadShape}
+                        onCreateSpace={this._onCreateSpace}
                         onClose={this._toggleContextMenu.bind(this, false)}
                     />
                 )}

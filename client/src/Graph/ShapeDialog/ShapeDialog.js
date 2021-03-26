@@ -3,6 +3,7 @@ import "./ShapeDialog.css";
 import configs from "../configs";
 
 import ObjectView from "./ObjectView/ObjectView";
+import SpaceView from "../../Space/View";
 import MenuController from "./MenuController/MenuController";
 import Loader from "../../Components/Loader/Loader";
 
@@ -12,10 +13,20 @@ class ShapeDialog extends Component {
     constructor(props) {
         super(props);
 
-        if (props.shape.config) {
+        if (props.shape === "space") {
+            this.firstName = `spaces/${Date.now()}`;
+
+            this.firstSettings = {
+                style: "space",
+            };
+
+            this.action = "save";
+            this.shape = props.shape;
+        } else if (props.shape.config) {
             this.firstName = props.shape.config.name;
             this.firstSettings = props.shape.config.settings;
-            this.action = 'update';
+            this.shape = props.shape.config.readyShape;
+            this.action = "update";
         } else {
             const fullName = props.shape.name.split(".");
             fullName.pop();
@@ -27,19 +38,18 @@ class ShapeDialog extends Component {
                 stand: "grid",
                 sunTime: 0,
                 camera: {
-                    position: {x: -330, y:  250, z:  400}
-                }
+                    position: { x: -330, y: 250, z: 400 },
+                },
             };
 
-            this.action = 'save';
+            this.action = "save";
         }
 
         this.state = {
-			shape: props.shape.config && props.shape.config.readyShape,
+            shape: this.shape,
             name: this.firstName,
-            objectView: null,
             settings: this.firstSettings,
-            loadingStatus: ''
+            loadingStatus: "",
         };
 
         if (props.animation) {
@@ -86,40 +96,41 @@ class ShapeDialog extends Component {
 
         if (!this.state.shape) {
             const formData = new FormData();
-            formData.append('shape', this.props.shape);
-    
+            formData.append("shape", this.props.shape);
+
             this.setState({
-                loadingStatus: 'Загрузка файла...'
+                loadingStatus: "Загрузка файла...",
             });
-            fetch('/api/shape/saveFile', {
+            fetch("/api/shape/saveFile", {
                 method: "POST",
-                body: formData
-            }).then(res => {
-                return res.json();
-            }).then(res => {
-                if (res.link) {
-                    const shapeReader = new FileReader();
-                    shapeReader.onload = () => {
-                        const shapeLoader = new OBJLoader();
-                        this.setState({
-                            loadingStatus: 'Обработка модели...'
-                        });
-                        shapeLoader.load(shapeReader.result, (shape) => {
+                body: formData,
+            })
+                .then((res) => {
+                    return res.json();
+                })
+                .then((res) => {
+                    if (res.link) {
+                        const shapeReader = new FileReader();
+                        shapeReader.onload = () => {
+                            const shapeLoader = new OBJLoader();
                             this.setState({
-                                shape,
+                                loadingStatus: "Обработка модели...",
                             });
-    
-                            this.state.settings.link = res.link;
+                            shapeLoader.load(shapeReader.result, (shape) => {
+                                this.setState({
+                                    shape,
+                                });
+
+                                this.state.settings.link = res.link;
+                            });
+                        };
+
+                        this.setState({
+                            loadingStatus: "Чтение файла...",
                         });
-                    };
-    
-                    this.setState({
-                        loadingStatus: 'Чтение файла...'
-                    });
-                    shapeReader.readAsDataURL(this.props.shape);
-                    
-                }
-            });
+                        shapeReader.readAsDataURL(this.props.shape);
+                    }
+                });
         }
     }
 
@@ -130,20 +141,20 @@ class ShapeDialog extends Component {
     }
 
     checkName() {
-        let names = this.state.name.split('/');
-        names = names.filter(name => !!name.length && name !== '..');
+        let names = this.state.name.split("/");
+        names = names.filter((name) => !!name.length && name !== "..");
 
         let resultName;
         if (!names.length) {
             resultName = this.firstName;
         } else if (names.length === 1) {
-            resultName = `default/${names[0]}`
+            resultName = `default/${names[0]}`;
         } else {
-            resultName = names.join('/');
+            resultName = names.join("/");
         }
 
         this.setState({
-            name: resultName
+            name: resultName,
         });
     }
 
@@ -156,13 +167,13 @@ class ShapeDialog extends Component {
     updateSettings(settings) {
         const newSettings = {
             ...this.state.settings,
-            ...settings
-		};
+            ...settings,
+        };
 
-		if (this.objectView) {
-			this.objectView.updateView(newSettings);
-		}
-        
+        if (this.view) {
+            this.view.updateView(newSettings);
+        }
+
         this.setState({
             settings: newSettings,
         });
@@ -173,21 +184,21 @@ class ShapeDialog extends Component {
     }
 
     saveClick() {
-        let { screenshot, settings } = this.objectView.getConfig();
+        let { screenshot, settings } = this.view.getConfig();
 
         // внутри сцены обновляется время и положение камеры
         settings = {
             ...this.state.settings,
-            ...settings
+            ...settings,
         };
 
         // ради оптимизации при обновлении повторно не передаем объект
         this.closeDialog(this.action, {
-            readyShape: this.action === 'save' && this.state.shape,
-			name: this.state.name,
-			screenshot,
-			settings
-		});
+            readyShape: this.action === "save" && this.state.shape,
+            name: this.state.name,
+            screenshot,
+            settings,
+        });
     }
 
     closeDialog(state, shape) {
@@ -216,16 +227,22 @@ class ShapeDialog extends Component {
 
         return (
             <div
-                ref={(overlay) => {this.popupOverlay = overlay;}}
+                ref={(overlay) => {
+                    this.popupOverlay = overlay;
+                }}
                 className="shapeDialog-overlay"
                 style={{
                     backgroundColor:
                         configs.styleDialog[this.state.settings.style].overlay,
-                }}>
+                }}
+            >
                 <div
                     style={contentStyle}
                     className="shapeDialog"
-                    ref={(popup) => {this.popup = popup;}}>
+                    ref={(popup) => {
+                        this.popup = popup;
+                    }}
+                >
                     <div className="shapeDialog-header">
                         <input
                             ref={(input) => {
@@ -241,29 +258,44 @@ class ShapeDialog extends Component {
                         />
                     </div>
                     {!this.state.shape ? (
-						<div className="shapeDialog-main">
+                        <div className="shapeDialog-main">
                             <Loader
                                 color="#000000"
                                 opacity="0.4"
                                 weight="14px"
                                 status={this.state.loadingStatus}
                                 statusStyle={{
-                                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                                    color: '#ffffff'
-                                }}/>
-						</div>
+                                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                    color: "#ffffff",
+                                }}
+                            />
+                        </div>
                     ) : (
-                        <div className="shapeDialog-main" onClick={this.checkName}>
+                        <div
+                            className="shapeDialog-main"
+                            onClick={this.checkName}
+                        >
                             <div className="shapeDialog-main__view">
-                                <ObjectView
-                                    ref={(objectView) => {this.objectView = objectView;}}
-                                    shape={this.state.shape}
-									settings={this.firstSettings}
-									updateSettings={this.updateSettings}
-                                />
+                                {this.state.shape !== "space" ? (
+                                    <ObjectView
+                                        ref={(view) => {
+                                            this.view = view;
+                                        }}
+                                        shape={this.state.shape}
+                                        settings={this.firstSettings}
+                                        updateSettings={this.updateSettings}
+                                    />
+                                ) : (
+                                    <SpaceView
+                                        ref={(view) => {
+                                            this.view = view;
+                                        }}
+                                    />
+                                )}
                             </div>
                             <MenuController
-								settings={this.state.settings}
+                                isSpace={this.state.shape === "space"}
+                                settings={this.state.settings}
                                 onUpdateSettings={this.updateSettings}
                                 cancelClick={this.cancelClick}
                                 saveClick={this.saveClick}

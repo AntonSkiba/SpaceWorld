@@ -2,7 +2,6 @@ import React, { PureComponent } from "react";
 import "./ObjectView.css";
 
 import * as THREE from "three";
-// import {MTLLoader, OBJLoader} from 'three-obj-mtl-loader';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import configs from "../../configs";
 
@@ -14,6 +13,7 @@ class ObjectView extends PureComponent {
         super(props);
 
         this.settings = props.settings;
+
         this.shape = props.shape.clone();
 
         this.startAnimationLoop = this.startAnimationLoop.bind(this);
@@ -24,6 +24,7 @@ class ObjectView extends PureComponent {
         this.sceneSetup();
         this.lightsSetup();
         this.shapeSetup();
+        
 
         // Может вызываться извне для управления состояниями из меню
         this.updateView(this.settings);
@@ -56,18 +57,24 @@ class ObjectView extends PureComponent {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x7b87bd);
 
+        const color = 0xFFFFFF;  // белый
+        const near = 1000;
+        const far = 10000;
+        //this.scene.fog = new THREE.Fog(color, near, far);
+
         this.camera = new THREE.PerspectiveCamera(
-            75,
+            45,
             width / height,
             0.1,
-            10000
+            100000
         );
 
         // Вызываются только при построении и обновляются здесь
         this.updateTime(this.settings.sunTime);
         this.updateCamera(this.settings.camera);
-
+        
         this.controls = new OrbitControls(this.camera, this.view);
+        
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.shadowMap.enabled = true;
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -76,17 +83,17 @@ class ObjectView extends PureComponent {
     }
 
     lightsSetup() {
-        const sunGeo = new THREE.SphereBufferGeometry(14, 20, 20);
+        const sunGeo = new THREE.SphereBufferGeometry(80, 20, 20);
         const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         this.sun = new THREE.Mesh(sunGeo, sunMat);
 
         this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         this.directionalLight.castShadow = true;
-        this.directionalLight.shadow.mapSize.width = 4096; // default
-        this.directionalLight.shadow.mapSize.height = 4096; // default
+        this.directionalLight.shadow.mapSize.width = 16384; // default
+        this.directionalLight.shadow.mapSize.height = 16384; // default
         this.directionalLight.shadow.camera.near = 0.1;
         this.directionalLight.shadow.camera.far = 10000;
-        this.directionalLight.shadow.camera.zoom = 0.01;
+        this.directionalLight.shadow.camera.zoom = 0.001;
         this.directionalLight.add(this.sun);
         this.scene.add(this.directionalLight);
 
@@ -128,7 +135,7 @@ class ObjectView extends PureComponent {
         // Объект
         const material = new THREE.MeshPhongMaterial({
             color: 0xffffff,
-            shininess: 40,
+            shininess: 40
         });
 
         this.shape.traverse((shapeChild) => {
@@ -174,8 +181,8 @@ class ObjectView extends PureComponent {
 
     updateView(settings) {
         this.toggleStand(settings.stand);
-        this.toggleLight(settings.style);
         this.scaleObject(settings.scale);
+        this.toggleLight(settings.style);
         this.settings = settings;
     }
 
@@ -246,14 +253,14 @@ class ObjectView extends PureComponent {
 
     startAnimationLoop() {
         this.sunTime++;
-        const time = this.sunTime * 0.001;
+        const time = this.sunTime * 0.01;
         if (time > Math.PI*2) {
             this.sunTime = 0;
         }
 
-        this.directionalLight.position.x = Math.sin(time) * 1000;
-        this.directionalLight.position.y = Math.cos(time) * 1000 + 1000;
-        this.directionalLight.position.z = Math.cos(time) * 1000;
+        this.directionalLight.position.x = Math.sin(time) * 1500;
+        this.directionalLight.position.y = Math.cos(time) * 1500;
+        this.directionalLight.position.z = Math.cos(time) * 1500;
 
         // this.light1.position.x = Math.sin( time * 0.7 ) * 300;
         // this.light1.position.y = Math.cos( time * 0.5 ) * 400;

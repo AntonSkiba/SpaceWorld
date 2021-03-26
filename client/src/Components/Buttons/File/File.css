@@ -1,6 +1,7 @@
 .file-container {
 	margin: 5px;
 	display: flex;
+	width: calc(100% - 10px);
 }
 
 .file-input {

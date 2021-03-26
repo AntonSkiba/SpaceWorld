@@ -29,6 +29,16 @@ class MenuController extends Component {
 
 		return (
 			<div className="menuController" style={panel}>
+				{this.props.isSpace && 
+				<div className="menuController-buttons">
+					<div
+						title="Space settings"
+						onClick={this.toggleMenu.bind(this, 'space')}
+						className={'menuController-buttons__item' + (this.state.menu === 'space' ? ' selected': '')}>
+						<div className="menuController-buttons__item-image" style={{backgroundImage: "url('/icons/cube.png')"}}/>
+					</div>
+				</div>}
+				{!this.props.isSpace && 
 				<div className="menuController-buttons">
 					<div
 						title="Object view settings"
@@ -42,7 +52,7 @@ class MenuController extends Component {
 						className={'menuController-buttons__item' + (this.state.menu === 'world' ? ' selected': '')}>
 						<div className="menuController-buttons__item-image" style={{backgroundImage: "url('/icons/world.png')"}}/>
 					</div>
-				</div>
+				</div>}
 				<Menu
 					settings={this.props.settings}
 					menu={this.state.menu}

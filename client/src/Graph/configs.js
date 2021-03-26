@@ -16,6 +16,10 @@ const configs = {
             background: "#9bd99a",
             overlay: "rgba(0, 69, 6, 0.6)",
         },
+        space: {
+            background: "#02000f",
+            overlay: "rgba(0, 0, 0, 0.8)",
+        },
     },
 
     styleCanvas: {
@@ -38,6 +42,10 @@ const configs = {
             sky: 0xe1ffdb,
             light: 0x9dff7d,
             grid: 0x72a168,
+        },
+        space: {
+            sky: 0x030024,
+            light: 0xffffff,
         },
     },
 

@@ -36,10 +36,11 @@ class Menu extends Component {
 			position: 'absolute',
 			transition: '0.4s ease',
 			left: 'calc(100% + 2px)',
-			width: this.props.menu ? '200px' : '0',
+			width: this.props.menu ? '190px' : '0',
 			backgroundColor: this.props.menu ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0)',
-			height: '549px',
-			opacity: this.props.menu ? 1 : 0
+			height: '539px',
+			opacity: this.props.menu ? 1 : 0,
+			padding: '5px'
 		};
 
 		let menuBody = <div className="menu" style={style}></div>
@@ -60,6 +61,13 @@ class Menu extends Component {
 			menuBody = 
 			<div className="menu-body">
 				WORLD
+			</div>
+		}
+
+		if (this.props.menu === 'space') {
+			menuBody = 
+			<div className="menu-body">
+				Space
 			</div>
 		}
 

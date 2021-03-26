@@ -1,6 +1,8 @@
 .switch-container {
 	display: flex;
-	margin: 10px;
+	margin: 5px;
+	display: flex;
+	width: calc(100% - 10px);
 }
 
 .switch {

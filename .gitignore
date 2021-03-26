@@ -106,5 +106,7 @@ dist
 # Project ignore list
 shapes/configs/*
 shapes/files/*
+planets/*
 !shapes/configs/readme.md
 !shapes/files/readme.md
+!planets/readme.md
