@@ -10,7 +10,10 @@ app.use(express.static('public'));
 app.use(express.json({limit: '300mb', extended: true }));
 app.use(express.urlencoded({limit: '300mb', extended: true}));
 
-app.use('/api/shape', require('./routes/shape.routes'));
+app.use('/api/vertex', require('./routes/graph/vertex.routes'));
+app.use('/api/shape', require('./routes/graph/shape.routes'));
+app.use('/api/place', require('./routes/graph/place.routes'));
+
 app.use('/api/planet', require('./routes/planet.routes'));
 
 const PORT = config.get('port') || 5000;
@@ -52,16 +55,16 @@ function createProjectDirectory() {
 						if (err) reject(err);
 
 						console.log('-> Planets');
-						fs.mkdir('../SpaceWorldData/Shapes', (err) => {
+						fs.mkdir('../SpaceWorldData/Vertices', (err) => {
 							if (err) reject(err);
 
-							console.log('-> Shapes');
-							fs.mkdir('../SpaceWorldData/Shapes/files', (err) => {
+							console.log('-> Vertices');
+							fs.mkdir('../SpaceWorldData/Vertices/files', (err) => {
 								if (err) reject(err);
 								
 								console.log('--> files');
 
-								fs.mkdir('../SpaceWorldData/Shapes/configs', (err) => {
+								fs.mkdir('../SpaceWorldData/Vertices/configs', (err) => {
 									if (err) reject(err);
 									
 									console.log('--> configs');
@@ -77,15 +80,15 @@ function createProjectDirectory() {
 				fs.readdir('../SpaceWorldData/Planets', (err) => {
 					if (err) reject(err);
 					console.log(`../SpaceWorldData/Planets: ${exists}`);
-					fs.readdir('../SpaceWorldData/Shapes', (err) => {
+					fs.readdir('../SpaceWorldData/Vertices', (err) => {
 						if (err) reject(err);
-						console.log(`../SpaceWorldData/Shapes: ${exists}`);
-						fs.readdir('../SpaceWorldData/Shapes/files', (err) => {
+						console.log(`../SpaceWorldData/Vertices: ${exists}`);
+						fs.readdir('../SpaceWorldData/Vertices/files', (err) => {
 							if (err) reject(err);
-							console.log(`../SpaceWorldData/Shapes/files: ${exists}`);
-							fs.readdir('../SpaceWorldData/Shapes/configs', (err) => {
+							console.log(`../SpaceWorldData/Vertices/files: ${exists}`);
+							fs.readdir('../SpaceWorldData/Vertices/configs', (err) => {
 								if (err) reject(err);
-								console.log(`../SpaceWorldData/Shapes/configs: ${exists}`);
+								console.log(`../SpaceWorldData/Vertices/configs: ${exists}`);
 								resolve();
 							});
 						});

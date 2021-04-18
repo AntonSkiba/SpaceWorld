@@ -1,6 +1,6 @@
 import React, { PureComponent } from "react";
 import "./Vertex.css";
-import configs from "../configs";
+import configs from "../../Components/Dialog/configs";
 
 import Loader from "../../Components/Loader/Loader";
 
@@ -11,62 +11,7 @@ class Vertex extends PureComponent {
         this.startPress = this.startPress.bind(this);
         this.endPress = this.endPress.bind(this);
         this.move = this.move.bind(this);
-    }
-
-    componentDidMount() {
-        if (this.props.status === "new") {
-			//const formData = new FormData();
-
-            this.shapeFetch("upload", {
-				method: "POST",
-				headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: this.props.config.name,
-                    screenshot: this.props.config.screenshot,
-                    settings: this.props.config.settings
-                }),
-            }).then(res => {
-                if (res.path) {
-                    console.log(res.path);
-                    this.props.changeVertex({
-                        status: 'loaded',
-                        path: res.path
-                    });
-                }
-            });
-        }
-    }
-
-    componentDidUpdate() {
-        if (this.props.status === "update") {
-            this.shapeFetch("upload", {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    path: this.props.path,
-                    name: this.props.config.name,
-                    screenshot: this.props.config.screenshot,
-                    settings: this.props.config.settings
-                }),
-            }).then(res => {
-                if (res.path) {
-                    console.log(res.path);
-                    this.props.changeVertex({status: 'loaded'});
-                }
-            });
-        }
-    }
-
-    shapeFetch(action, data) {
-        return fetch(`/api/shape/${action}`, data).then((res) => {
-            return res.json();
-        });
+        this.type = props.config ? props.config.type : 'world'; // shape/place/world
     }
 
     startPress(e) {
@@ -94,7 +39,7 @@ class Vertex extends PureComponent {
     }
 
     render() {
-        const loading = ['new', 'update'].includes(this.props.status);
+        //const loading = ['new', 'update'].includes(this.props.status);
 
         let style = {
             top: this.props.position.y - this.props.size / 2,
@@ -136,7 +81,7 @@ class Vertex extends PureComponent {
                 onMouseDown={this.startPress}
                 onMouseUp={this.endPress}
             >
-                {loading && (
+                {/* {loading && (
                     <Loader
                         size={this.props.size}
                         color={
@@ -146,7 +91,7 @@ class Vertex extends PureComponent {
                         opacity="0.8"
                         weight="10px"
                     />
-                )}
+                )} */}
                 {this.props.text && this.props.text.caption}
                 {imgStyle && <div style={imgStyle}></div>}
             </div>

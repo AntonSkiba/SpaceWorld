@@ -1,0 +1,300 @@
+.ocean {
+	color: rgb(17, 0, 77);
+}
+
+.plains {
+	color: rgb(132, 165, 90);
+}
+
+.desert {
+	color: rgb(221, 142, 52);
+}
+
+.mountains {
+	color: rgb(58, 58, 58);
+}
+
+.forest {
+	color: rgb(0, 56, 0);
+}
+
+.taiga {
+	color: rgb(1, 75, 56);
+}
+
+.swamp {
+	color: rgb(44, 39, 10);
+}
+
+.river {
+	color: rgb(1, 4, 153);
+}
+
+.netherWastes {
+	color: rgb(119, 23, 23);
+}
+
+.frozenOcean {
+	color: rgb(112, 60, 233);
+}
+
+.frozenRiver {
+	color: rgb(154, 98, 243);
+}
+
+.snowyTundra {
+	color: rgb(226, 255, 241);
+}
+
+.wetTundra {
+	color: rgb(230, 211, 255);
+}
+
+.snowyMountains {
+	color: rgb(206, 206, 206);
+}
+
+.beach {
+	color: rgb(235, 215, 162);
+}
+
+.coldDesert {
+	color: rgb(179, 177, 114);
+}
+
+.desertHills {
+	color: rgb(175, 80, 25);
+}
+
+.woodedHills {
+	color: rgb(31, 85, 0);
+}
+
+.taigaHills {
+	color: rgb(0, 51, 17);
+}
+
+.mountainEdge {
+	color: rgb(71, 82, 99);
+}
+
+.jungle {
+	color: rgb(49, 107, 15);
+}
+
+.jungleHills {
+	color: rgb(31, 56, 28);
+}
+
+.jungleEdge {
+	color: rgb(74, 131, 27);
+}
+
+.deepOcean {
+	color: rgb(1, 10, 36);
+}
+
+.stoneShore {
+	color: rgb(170, 163, 126);
+}
+
+.snowyBeach {
+	color: rgb(224, 212, 176);
+}
+
+.birchForest {
+	color: rgb(52, 110, 71);
+}
+
+.birchForestHills {
+	color: rgb(31, 68, 31);
+}
+
+.darkForest {
+	color: rgb(48, 66, 5);
+}
+
+.snowyTaiga {
+	color: rgb(15, 66, 58);
+}
+
+.snowyTaigaHills {
+	color: rgb(8, 44, 39);
+}
+
+.borealForest {
+	color: rgb(143, 161, 132);
+}
+
+.giantTreeTaigaHills {
+	color: rgb(69, 79, 62);
+}
+
+.woodedMountains {
+	color: rgb(80, 112, 80);
+}
+
+.savanna {
+	color: rgb(172, 189, 95);
+}
+
+.savannaPlateau {
+	color: rgb(167, 157, 100);
+}
+
+.badlands {
+	color: rgb(217, 69, 21);
+}
+
+.woodedBadlandsPlateau {
+	color: rgb(176, 151, 101);
+}
+
+.badlandsPlateau {
+	color: rgb(202, 140, 101);
+}
+
+.endMidlands {
+	color: rgb(128, 128, 255);
+}
+
+.warmOcean {
+	color: rgb(0, 0, 172);
+}
+
+.lukewarmOcean {
+	color: rgb(0, 0, 144);
+}
+
+.coldOcean {
+	color: rgb(32, 32, 112);
+}
+
+.deepWarmOcean {
+	color: rgb(0, 0, 80);
+}
+
+.deepLukewarmOcean {
+	color: rgb(0, 0, 64);
+}
+
+.deepColdOcean {
+	color: rgb(32, 32, 56);
+}
+
+.deepFrozenOcean {
+	color: rgb(64, 64, 144);
+}
+
+.theVoid {
+	color: rgb(0, 0, 0);
+}
+
+.sunflowerPlains {
+	color: rgb(181, 219, 136);
+}
+
+.desertLakes {
+	color: rgb(255, 188, 64);
+}
+
+.gravellyMountains {
+	color: rgb(136, 136, 136);
+}
+
+.flowerForest {
+	color: rgb(45, 142, 73);
+}
+
+.taigaMountains {
+	color: rgb(51, 142, 129);
+}
+
+.swampHills {
+	color: rgb(47, 255, 218);
+}
+
+.iceCap {
+	color: rgb(180, 220, 220);
+}
+
+.snowCap {
+	color: rgb(228, 246, 250)
+}
+
+.modifiedJungle {
+	color: rgb(123, 163, 49);
+}
+
+.modifiedJungleEdge {
+	color: rgb(138, 179, 63);
+}
+
+.tallBirchForest {
+	color: rgb(88, 156, 108);
+}
+
+.tallBirchHills {
+	color: rgb(71, 135, 90);
+}
+
+.darkForestHills {
+	color: rgb(104, 121, 66);
+}
+
+.snowyTaigaMountains {
+	color: rgb(89, 125, 114);
+}
+
+.giantSpruceTaiga {
+	color: rgb(129, 142, 121);
+}
+
+.giantSpruceTaigaHills {
+	color: rgb(109, 119, 102);
+}
+
+.shatteredSavanna {
+	color: rgb(229, 218, 135);
+}
+
+.shatteredSavannaPlateau {
+	color: rgb(207, 197, 140);
+}
+
+.erodedBadlands {
+	color: rgb(255, 109, 61);
+}
+
+.modifiedWoodedBadlandsPlateau {
+	color: rgb(216, 191, 141);
+}
+
+.modifiedBadlandsPlateau {
+	color: rgb(242, 180, 141);
+}
+
+.bambooJungle {
+	color: rgb(118, 142, 20);
+}
+
+.bambooJungleHills {
+	color: rgb(59, 71, 10);
+}
+
+.soulSandValley {
+	color: rgb(94, 56, 48);
+}
+
+.crimsonForest {
+	color: rgb(221, 8, 8);
+}
+
+.warpedForest {
+	color: rgb(73, 144, 123);
+}
+
+.basaltDeltas {
+	color: rgb(64, 54, 54);
+}
+

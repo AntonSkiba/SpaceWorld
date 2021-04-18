@@ -1,22 +1,30 @@
-import * as THREE from "three";
 import QuadTree from './QuadTree';
-import ChunkManager from './ChunkManager'
+import ChunkManager from './Chunk/Manager';
 
 export default class Planet {
-	constructor(radius, scene, seed = 13) {
+	constructor(config, scene) {
 		this._noise = {
-			seed,
-			octaves: 20,
-			frequence: 3,
-			flatness: 3,
+			terrain: {
+				seed: config.seed || 16,
+				octaves: 20,
+				frequence: 2,
+				flatness: 3
+			},
+			biomes: {
+				seed: config.biomesSeed || 13,
+				octaves: 16,
+				frequence: 8,
+				flatness: 1
+			}
 		};
 
 		this._scene = scene;
 
 		this._created = false;
 
-		this._lod = 12;
-		this._radius = radius;
+		this._lod = 20;
+		this._radius = config.radius;
+		this._height = config.height;
 
 		// стороны планеты
 		this._sides = [];
@@ -26,6 +34,10 @@ export default class Planet {
 
 	get created() {
 		return this._created;
+	}
+
+	get radius() {
+		return this._radius;
 	}
 
 	async create() {
@@ -46,9 +58,6 @@ export default class Planet {
 			// построение новой планеты
 			//await this._build();
 
-			// запись референсных карт для каждой стороны
-			//await this._setMap();
-
 			this._created = true;
 
 			// создаем деревья квадрантов для каждой стороны
@@ -65,13 +74,6 @@ export default class Planet {
 			this._chunkManager.update(pos);
 			//this._insert(pos);
 		}
-
-		const dist = pos.distanceTo(new THREE.Vector3(0, 0, 0));
-		const atmosphere = 20000;
-		if (dist < this._radius + atmosphere) {
-			const color = 1 - (dist - this._radius) / atmosphere;
-			this._scene.background = new THREE.Color(0.5*color, 0.5*color, color);
-		}
 	}
 
 	// метод отправляет запрос на инициализацию новой планеты
@@ -84,7 +86,9 @@ export default class Planet {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				noise: this._noise
+				noise: this._noise,
+				radius: this._radius,
+				height: this._height
 			})
 		}).then((result) => result.json());
 	}
@@ -95,8 +99,8 @@ export default class Planet {
 		}).then((result) => {
 			return result.json()
 		}).then((config) => {
-			console.log(config.build.progress);
-			if (!config.build.status) {
+			console.log(config.process.build.percent);
+			if (!config.process.build.done) {
 				return this._build();
 			} else {
 				return config;

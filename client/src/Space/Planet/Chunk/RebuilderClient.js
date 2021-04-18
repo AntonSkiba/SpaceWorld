@@ -1,6 +1,6 @@
-import Chunk from '../Chunk';
+import Chunk from './Chunk';
 
-export default class ChunkRebuilder {
+export default class RebuilderClient {
 	constructor () {
 		this._pool = [];
 		this._reset();

@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import "./Graph.css";
 
 import ContextMenu from "./ContextMenu/ContextMenu";
-import ShapeDialog from "./ShapeDialog/ShapeDialog";
+import ShapeDialog from "../Shape/Dialog/Dialog";
+import PlaceDialog from "../Place/Dialog/Dialog";
 import Vertex from "./Vertex/Vertex";
 
 /**
@@ -42,32 +43,35 @@ class Graph extends Component {
                 },
             ],
 
-            loadedShape: null, // can be file, threejs Group, 'space'
+            openPlace: false,
+            openShape: false,
         };
 
         this._onLoadShape = this._onLoadShape.bind(this);
         this._onCreateSpace = this._onCreateSpace.bind(this);
-        this._shapeDialogClosed = this._shapeDialogClosed.bind(this);
+        this._dialogClose = this._dialogClose.bind(this);
     }
 
     _onLoadShape(e) {
         this._toggleContextMenu.call(this, false, e);
         this.setState({
-            loadedShape: e.target.files[0],
+            openShape: {
+                file: e.target.files[0],
+            },
         });
     }
 
     _onCreateSpace(e) {
         this._toggleContextMenu.call(this, false, e);
         this.setState({
-            loadedShape: 'space'
+            openPlace: true,
         });
     }
 
     _toggleContextMenu(show, e) {
         e?.preventDefault();
 
-        if (!this.state.loadedShape) {
+        if (!this.state.openShape && !this.state.openPlace) {
             this.setState({
                 menu: {
                     ...this.state.menu,
@@ -79,19 +83,21 @@ class Graph extends Component {
         }
     }
 
-    _shapeDialogClosed(state, config, e) {
+    _dialogClose(state, config, e) {
         if (state === "save") {
-			this._createVertex(config);
-		} else if (state === "update") {
-			this._updateVertex(config);
+            this._createVertex(config);
+        } else if (state === "update") {
+            this._updateVertex(config);
         } else {
             this._toggleContextMenu.call(this, true, e);
-		}
-		
-		this.openedIdx = null;
+        }
+
+        this.openedIdx = null;
 
         this.setState({
             loadedShape: null,
+            openShape: false,
+            openPlace: false,
         });
     }
 
@@ -103,56 +109,60 @@ class Graph extends Component {
                 y: this.state.menu.top + 20,
             },
             size: 80,
-            status: "new",
         };
 
         this.setState({
             structure: [...this.state.structure, vertex],
         });
-	}
+    }
 
-	_updateVertex(config) {
-		// прописываем исключительно новые опции, чтобы не было лагов с огромными моделями
+    _updateVertex(config) {
+        // прописываем исключительно новые опции, чтобы не было лагов с огромными моделями
         this.state.structure[this.openedIdx].config.name = config.name;
-        this.state.structure[this.openedIdx].config.screenshot = config.screenshot;
+        this.state.structure[this.openedIdx].config.screenshot =
+            config.screenshot;
         this.state.structure[this.openedIdx].config.settings = config.settings;
-        this.state.structure[this.openedIdx].status = 'update';
 
-		this.setState({
+        this.setState({
             structure: [...this.state.structure],
         });
-	}
+    }
 
-	_changeVertex(idx, vertex) {
-		this.state.structure[idx] = {
-			...this.state.structure[idx],
-			...vertex
-		};
+    _changeVertex(idx, vertex) {
+        this.state.structure[idx] = {
+            ...this.state.structure[idx],
+            ...vertex,
+        };
 
-		this.setState({
+        this.setState({
             structure: [...this.state.structure],
         });
-	}
+    }
 
-	_openShape(idx) {
-		if (idx) {
-			this.setState({
-				loadedShape: this.state.structure[idx],
-			});
-			
-			this.openedIdx = idx;
-		}
-	}
+    _openShape(idx) {
+        if (idx) {
+            const vertex = this.state.structure[idx];
+            const typeState = vertex.config.type === 'shape' ? 'openShape' : 'openPlace';
+            this.setState({
+                [typeState]: {
+                    config: vertex.config,
+                    position: vertex.position
+                },
+            });
+
+            this.openedIdx = idx;
+        }
+    }
 
     render() {
-		// анимация, либо от открываемой вершины, либо от кнопки добавления файла
-		const point = this.state.loadedShape && this.state.loadedShape.position || {
-			x: this.state.menu.left + this.state.menu.width / 2,
-			y: this.state.menu.top + 20,
-		};
+        // анимация, либо от открываемой вершины, либо от кнопки добавления файла
+        const point = this.state.openShape.position || {
+            x: this.state.menu.left + this.state.menu.width / 2,
+            y: this.state.menu.top + 20,
+        };
 
-        const shapeDialogAnimation = {
-            point, 
+        const dialogAnimation = {
+            point,
             time: 200,
         };
 
@@ -161,11 +171,12 @@ class Graph extends Component {
         };
 
         const structure = this.state.structure.map((vertex, idx) => (
-			<Vertex
-				{...vertex}
-				key={"vertex_" + idx}
-				changeVertex={this._changeVertex.bind(this, idx)}
-				openShape={this._openShape.bind(this, idx)}/>
+            <Vertex
+                {...vertex}
+                key={"vertex_" + idx}
+                changeVertex={this._changeVertex.bind(this, idx)}
+                openShape={this._openShape.bind(this, idx)}
+            />
         ));
 
         return (
@@ -185,11 +196,20 @@ class Graph extends Component {
                         onClose={this._toggleContextMenu.bind(this, false)}
                     />
                 )}
-                {this.state.loadedShape && (
+                {this.state.openShape && (
                     <ShapeDialog
-                        animation={shapeDialogAnimation}
-                        shape={this.state.loadedShape}
-                        onClose={this._shapeDialogClosed}
+                        animation={dialogAnimation}
+                        file={this.state.openShape.file}
+                        config={this.state.openShape.config}
+                        onClose={this._dialogClose}
+                    />
+                )}
+
+                {this.state.openPlace && (
+                    <PlaceDialog
+                        animation={dialogAnimation}
+                        config={this.state.openPlace.config}
+                        onClose={this._dialogClose}
                     />
                 )}
 

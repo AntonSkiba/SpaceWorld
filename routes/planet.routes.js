@@ -6,9 +6,9 @@ const router = Router();
 let planet = null;
 
 router.post("/init", (req, res) => {
-	const {noise} = req.body;
+	const {noise, radius, height} = req.body;
 	
-	planet = new Planet(noise);
+	planet = new Planet(noise, radius, height);
 	planet.init().then((config) => {
 		res.status(200).json(config);
 	}).catch((err) => {
@@ -19,11 +19,7 @@ router.post("/init", (req, res) => {
 router.get("/build", (req, res) => {
 	if (!planet) res.status(400).json({err: 'Планета еще не инициализирована'});
 
-	planet.build().then((config) => {
-		res.status(200).json(config);
-	}).catch((err) => {
-		res.status(500).json({err});
-	});
+	res.status(200).json(planet.build());
 });
 
 router.post("/chunk", (req, res) => {

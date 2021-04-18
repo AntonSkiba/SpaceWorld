@@ -1,12 +1,9 @@
 import * as THREE from "three";
-import SimplexNoise from 'simplex-noise';
-//import ChunkRebuilder from './ChunkRebuilder/ChunkRebuilder';
-import ChunkRebuilderThreaded from './ChunkRebuilder/ChunkRebuilderThreaded';
+import RebuilderServer from './RebuilderServer';
 
-export default class ChunkManager {
+export default class Manager {
 	constructor(params) {
 		this._noise = params.noise;
-		this._simplex = new SimplexNoise(params.noise.seed);
 
 		this._sides = params.sides;
 		this._groups = params.sides.map(() => new THREE.Group());
@@ -16,7 +13,7 @@ export default class ChunkManager {
 		this._scene.add(...this._groups);
 
 		this._material = this._createMaterial();
-		this._builder = new ChunkRebuilderThreaded();
+		this._builder = new RebuilderServer();
 	}
 
 	update(pos) {
@@ -51,11 +48,11 @@ export default class ChunkManager {
 		const intersection = this._getIntersection(this._chunks, newQuads);
 		const difference = this._getDifference(newQuads, this._chunks);
 		
-		// Для ChunkRebuilder
+		// Для RebuilderClient
 		// const recycle = Object.values(this._getDifference(this._chunks, newQuads));
 		// this._builder._old.push(...recycle);
 		
-		// Для ChunkRebuilderThreaded
+		// Для RebuilderServer
 		const recycle = this._getDifference(this._chunks, newQuads);
 		if (Object.keys(difference).length) {
 			this._builder._changes.push({difference, recycle, draw: {}});
@@ -102,7 +99,7 @@ export default class ChunkManager {
 	_createMaterial() {
 		return new THREE.MeshPhongMaterial({
             color: 0xffffff,
-            //wireframe: true,
+            // wireframe: true,
             vertexColors: THREE.VertexColors,
             shininess: 0.1,
         });
@@ -112,7 +109,6 @@ export default class ChunkManager {
 		const chunkParams = {
 			material: this._material,
 			resolution: 128,
-			simplex: this._simplex,
 			noise: this._noise,
 			...params
 		}

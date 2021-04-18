@@ -3,10 +3,18 @@
 const def = {
 	// конфигурация шума
 	noise: {
-		seed: 4,
-		octaves: 10,
-        frequence: 2,
-        flatness: 3,
+		terrain: {
+			seed: 4,
+			octaves: 16,
+			frequence: 2,
+			flatness: 3,
+		},
+		biomes: {
+			seed: 16,
+			octaves: 8,
+			frequence: 5,
+			flatness: 1,
+		}
 	},
 
 	// конфигурация построения планеты

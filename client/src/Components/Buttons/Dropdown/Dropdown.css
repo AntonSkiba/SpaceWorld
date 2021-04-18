@@ -1,0 +1,75 @@
+.dropdown-container {
+	display: flex;
+	margin: 5px;
+	width: calc(100% - 10px);
+	flex-direction: column;
+	transition: 0.4s ease;
+	position: relative;
+}
+
+.dropdown {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	transition: 0.4s ease;
+	overflow: auto;
+	border-radius: 0 0 5px 5px;
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+.dropdown::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0 0 5px 0;
+}
+
+/* Handle */
+.dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 0 0 5px 0;
+}
+
+/* Handle on hover */
+.dropdown::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.6);
+}
+
+.dropdown-item {
+	padding: 8px 10px 6px 10px;
+	color: white;
+	font-size: 20px;
+	cursor: pointer;
+	transition: 0.2s ease;
+	height: 40px;
+	text-align: center;
+}
+
+.dropdown-item:hover,
+.dropdown-button:hover {
+	filter: saturate(300%);
+}
+
+.dropdown-button {
+	border: none;
+	outline: none;
+	padding: 7px 10px 5px 10px;
+	background-color: rgba(0, 0, 0, 0.2);
+	color: white;
+	font-size: 20px;
+	cursor: pointer;
+	transition: 0.2s ease;
+	height: 40px;
+	width: 100%;
+}
+
+/* .dropdown-button:active {
+	border-radius: 5px 5px 0 0;
+} */
+
+.dropdown-button:focus {
+	border: none;
+	outline: none;
+}

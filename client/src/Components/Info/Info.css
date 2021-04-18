@@ -1,0 +1,63 @@
+.info {
+    border-radius: 20px;
+    transition: 0.4s ease;
+    background-color: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-body {
+    padding: 5px;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.info-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+.info-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0 0 10px 0;
+}
+
+/* Handle */
+.info-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 0 0 10px 0;
+}
+
+/* Handle on hover */
+.info-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.info-header__icon {
+    width: 40px;
+    height: 40px;
+    background-repeat: no-repeat;
+    background-size: 30px;
+    margin: 5px;
+    flex-shrink: 0;
+    cursor: pointer;
+	border-radius: 50%;
+}
+
+.info-header__icon:hover {
+	transition: 0.4s ease;
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+.info-header__caption {
+    color: #ffffff;
+    font-size: 20px;
+	margin-left: 110px;
+}

@@ -1,0 +1,39 @@
+.placeDialog-header {
+	width: 100%;
+	text-align: center;
+	border: 0;
+	border-bottom: 2px solid black;
+	font-size: 28px;
+	font-weight: bold;
+	background-color: inherit;
+	transition: 0.5s ease;
+	padding: 5px 0;
+	color: white;
+	line-height: 1.4;
+}
+
+.placeDialog-header:hover {
+	cursor: pointer;
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+.placeDialog-header:focus {
+	border: 0;
+	border-bottom: 2px solid black;
+	outline: none;
+	cursor: text;
+}
+
+.placeDialog-info {
+	color: #ffffff;
+	font-size: 14px;
+}
+
+.placeDialog-info__adding {
+	color: #abaae7;
+	font-size: 12px;
+}
+
+.placeDialog-info__zone {
+	text-shadow: 1px 1px 2px #ffffff;
+}

@@ -1,20 +1,20 @@
 import React, { PureComponent } from "react";
-import "./ObjectView.css";
+import "./View.css";
 
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import configs from "../../configs";
+import configs from "../../Components/Dialog/configs";
 
 /**
  * Панель характеристик объекта с самим трехмерным объектом
  */
-class ObjectView extends PureComponent {
+class ShapeView extends PureComponent {
     constructor(props) {
         super(props);
 
         this.settings = props.settings;
 
-        this.shape = props.shape.clone();
+        this._shape = props.shape.clone();
 
         this.startAnimationLoop = this.startAnimationLoop.bind(this);
         this._resize = this._resize.bind(this);
@@ -34,35 +34,35 @@ class ObjectView extends PureComponent {
 
     componentWillUnmount() {
         // window.removeEventListener('resize', this._resize);
+        
         window.cancelAnimationFrame(this.requestID);
-        this.controls.dispose();
+        this._controls.dispose();
+        this._renderer.dispose();
+        this._view.removeChild(this._renderer.domElement);
+        this._shape = null;
+        this._scene = null;
     }
 
     _resize() {
-        if (this.view) {
-            const width = this.view.clientWidth;
-            const height = this.view.clientHeight;
+        if (this._view) {
+            const width = this._view.clientWidth;
+            const height = this._view.clientHeight;
 
-            this.renderer.setSize(width, height);
-            this.camera.aspect = width / height;
+            this._renderer.setSize(width, height);
+            this._camera.aspect = width / height;
 
-            this.camera.updateProjectionMatrix();
+            this._camera.updateProjectionMatrix();
         }
     }
 
     sceneSetup() {
-        const width = this.view.clientWidth;
-        const height = this.view.clientHeight;
+        const width = this._view.clientWidth;
+        const height = this._view.clientHeight;
 
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x7b87bd);
+        this._scene = new THREE.Scene();
+        this._scene.background = new THREE.Color(0x7b87bd);
 
-        const color = 0xFFFFFF;  // белый
-        const near = 1000;
-        const far = 10000;
-        //this.scene.fog = new THREE.Fog(color, near, far);
-
-        this.camera = new THREE.PerspectiveCamera(
+        this._camera = new THREE.PerspectiveCamera(
             45,
             width / height,
             0.1,
@@ -73,13 +73,13 @@ class ObjectView extends PureComponent {
         this.updateTime(this.settings.sunTime);
         this.updateCamera(this.settings.camera);
         
-        this.controls = new OrbitControls(this.camera, this.view);
+        this._controls = new OrbitControls(this._camera, this._view);
         
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setSize(width, height);
-        this.view.appendChild(this.renderer.domElement);
+        this._renderer = new THREE.WebGLRenderer({ antialias: true });
+        this._renderer.shadowMap.enabled = true;
+        this._renderer.setPixelRatio(window.devicePixelRatio);
+        this._renderer.setSize(width, height);
+        this._view.appendChild(this._renderer.domElement);
     }
 
     lightsSetup() {
@@ -95,7 +95,7 @@ class ObjectView extends PureComponent {
         this.directionalLight.shadow.camera.far = 10000;
         this.directionalLight.shadow.camera.zoom = 0.001;
         this.directionalLight.add(this.sun);
-        this.scene.add(this.directionalLight);
+        this._scene.add(this.directionalLight);
 
         this.setHelperLight(1000, 100, 0);
         this.setHelperLight(-1000, 100, 0);
@@ -103,24 +103,24 @@ class ObjectView extends PureComponent {
         this.setHelperLight(0, 100, -1000);
 
         // this.ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-        // this.scene.add(this.ambientLight);
+        // this._scene.add(this.ambientLight);
         // const sphere = new THREE.SphereBufferGeometry( 14, 16, 16 );
 
         // this.light1 = new THREE.PointLight( 0xae24f2, 2, 700 );
         // this.light1.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xae24f2 } ) ) );
-        // this.scene.add( this.light1 );
+        // this._scene.add( this.light1 );
 
         // this.light2 = new THREE.PointLight( 0x2470f2, 2, 700 );
         // this.light2.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x2470f2 } ) ) );
-        // this.scene.add( this.light2 );
+        // this._scene.add( this.light2 );
 
         // this.light3 = new THREE.PointLight( 0xffffff, 2, 700 );
         // this.light3.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xffffff } ) ) );
-        // this.scene.add( this.light3 );
+        // this._scene.add( this.light3 );
 
         // this.light4 = new THREE.PointLight( 0xffffff, 2, 700 );
         // this.light4.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xffffff } ) ) );
-        // this.scene.add( this.light4 );
+        // this._scene.add( this.light4 );
     }
 
     setHelperLight(x = 0, y = 0, z = 0, color = 0xffffff, intensity = 0.2) {
@@ -128,7 +128,7 @@ class ObjectView extends PureComponent {
         helperLight.position.x = x;
         helperLight.position.y = y;
         helperLight.position.z = z;
-        this.scene.add(helperLight);
+        this._scene.add(helperLight);
     }
 
     shapeSetup() {
@@ -138,7 +138,7 @@ class ObjectView extends PureComponent {
             shininess: 40
         });
 
-        this.shape.traverse((shapeChild) => {
+        this._shape.traverse((shapeChild) => {
             if (shapeChild instanceof THREE.Mesh) {
                 shapeChild.material = material;
                 shapeChild.castShadow = true;
@@ -146,7 +146,7 @@ class ObjectView extends PureComponent {
             }
         });
 
-        const box = new THREE.Box3().setFromObject(this.shape);
+        const box = new THREE.Box3().setFromObject(this._shape);
 		const center = new THREE.Vector3();
 		const size = new THREE.Vector3();
 		box.getCenter(center);
@@ -164,7 +164,7 @@ class ObjectView extends PureComponent {
 		
 		this.props.updateSettings(this.settings);
 
-        this.scene.add(this.shape);
+        this._scene.add(this._shape);
 
         // хелперы
         this.grid = new THREE.GridHelper(2000, 99, 0xffffff, 0xffffff);
@@ -187,39 +187,39 @@ class ObjectView extends PureComponent {
     }
 
     toggleStand(type) {
-        this.scene.remove(this.grid);
-        this.scene.remove(this.plane);
+        this._scene.remove(this.grid);
+        this._scene.remove(this.plane);
         switch (type) {
             case "grid":
-                this.scene.add(this.grid);
+                this._scene.add(this.grid);
                 break;
             case "plane":
-                this.scene.add(this.plane);
+                this._scene.add(this.plane);
                 break;
         }
     }
 
     toggleLight(style) {
-        this.scene.background = new THREE.Color(configs.styleCanvas[style].sky);
+        this._scene.background = new THREE.Color(configs.styleCanvas[style].sky);
         this.directionalLight.color.setHex(configs.styleCanvas[style].light);
         this.sun.material.color.setHex(configs.styleCanvas[style].light);
         this.grid.material.color.setHex(configs.styleCanvas[style].grid);
     }
 
     changePosition(pos) {
-        this.shape.position.x = pos.x || this.shape.position.x;
-        this.shape.position.y = pos.y || this.shape.position.y;
-        this.shape.position.z = pos.z || this.shape.position.z;
+        this._shape.position.x = pos.x || this._shape.position.x;
+        this._shape.position.y = pos.y || this._shape.position.y;
+        this._shape.position.z = pos.z || this._shape.position.z;
     }
 
     scaleObject(scale) {
-        this.shape.scale.x = scale;
-        this.shape.scale.y = scale;
-        this.shape.scale.z = scale;
+        this._shape.scale.x = scale;
+        this._shape.scale.y = scale;
+        this._shape.scale.z = scale;
 
-        this.shape.position.y = this.zeroPosition.y * scale;
-        this.shape.position.x = this.zeroPosition.x * scale;
-        this.shape.position.z = this.zeroPosition.z * scale;
+        this._shape.position.y = this.zeroPosition.y * scale;
+        this._shape.position.x = this.zeroPosition.x * scale;
+        this._shape.position.z = this.zeroPosition.z * scale;
     }
 
     updateTime(sunTime) {
@@ -227,9 +227,9 @@ class ObjectView extends PureComponent {
     }
 
     updateCamera(camera) {
-        this.camera.position.x = camera.position.x;
-        this.camera.position.y = camera.position.y;
-		this.camera.position.z = camera.position.z;
+        this._camera.position.x = camera.position.x;
+        this._camera.position.y = camera.position.y;
+		this._camera.position.z = camera.position.z;
     }
 
     getConfig() {
@@ -240,20 +240,20 @@ class ObjectView extends PureComponent {
             settings: {
                 sunTime: this.sunTime,
                 camera: {
-					position: this.camera.position
+					position: this._camera.position
 				},
             },
         };
     }
 
     takeScreenshot() {
-        this.renderer.render(this.scene, this.camera);
-        return this.renderer.domElement.toDataURL();
+        this._renderer.render(this._scene, this._camera);
+        return this._renderer.domElement.toDataURL();
     }
 
     startAnimationLoop() {
         this.sunTime++;
-        const time = this.sunTime * 0.01;
+        const time = this.sunTime * 0.001;
         if (time > Math.PI*2) {
             this.sunTime = 0;
         }
@@ -278,7 +278,7 @@ class ObjectView extends PureComponent {
         // this.light4.position.y = Math.cos( time * 0.7 ) * 400;
         // this.light4.position.z = Math.sin( time * 0.5 ) * 300;
 
-        this.renderer.render(this.scene, this.camera);
+        this._renderer.render(this._scene, this._camera);
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     }
 
@@ -287,11 +287,11 @@ class ObjectView extends PureComponent {
             <div className="object-view" tabIndex="0">
                 <div
                     className="object-view__canvas"
-                    ref={(ref) => (this.view = ref)}
+                    ref={(view) => (this._view = view)}
                 />
             </div>
         );
     }
 }
 
-export default ObjectView;
+export default ShapeView;
