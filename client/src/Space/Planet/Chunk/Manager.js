@@ -1,23 +1,27 @@
 import * as THREE from "three";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
+
 import RebuilderServer from './RebuilderServer';
 
 export default class Manager {
 	constructor(params) {
-		this._noise = params.noise;
-
 		this._sides = params.sides;
 		this._groups = params.sides.map(() => new THREE.Group());
 		this._chunks = {};
 
 		this._scene = params.scene;
 		this._scene.add(...this._groups);
+		this._modelsGroup = new THREE.Group();
+		this._scene.add(this._modelsGroup);
 
 		this._material = this._createMaterial();
-		this._builder = new RebuilderServer();
+		this._modelMaterial = this._createModelMaterial();
+		this._models = {};
+
+		this._builder = new RebuilderServer(this._models, this._modelsGroup);
 	}
 
 	update(pos) {
-		this._builder.update();
 		// если билдер не заполнен, то вызываем обновление дерева
 		if (!this._builder.busy) {
 			this._updateQuadTree(pos);
@@ -59,14 +63,6 @@ export default class Manager {
 		}
 		
 		newQuads = intersection;
-
-		// if (Object.keys(difference).length) {
-		// 	console.log(intersection);
-		// 	console.log(difference);
-		// }
-		// if (recycle.length) {
-		// 	console.log(recycle);
-		// }
 		
 		// превращаем квадранты в настоящие участки
 		for (let key in difference) {
@@ -96,6 +92,80 @@ export default class Manager {
 		return diff;
 	}
 
+	// загружаем все модели
+	downloadModels(models) {
+		models.forEach(config => {
+			this._createModel(config);
+		});
+	}
+
+	_createModel(config) {
+		// загрузка файла
+		fetch(`/api/shape/download/${config.link}`, {
+            method: "GET"
+        }).then((res) => {
+            return res.json();
+        }).then((res) => {
+            this._fileProcessing(new File([res.file], config.name), config);
+        });
+	}
+
+	_fileProcessing(file, config) {
+		const shapeReader = new FileReader();
+		shapeReader.onload = () => {
+			const shapeLoader = new OBJLoader();
+			shapeLoader.load(shapeReader.result, (shape) => {
+				this._modelSetup(shape, config);
+			});
+		};
+
+		shapeReader.readAsDataURL(file);
+	}
+
+	_modelSetup(shape, config) {
+		shape.traverse(child => {
+			if (child instanceof THREE.Mesh) {
+				child.material = this._modelMaterial;
+				child.castShadow = true;
+				child.receiveShadow = true;
+			}
+		});
+
+		const box = new THREE.Box3().setFromObject(shape);
+		const center = new THREE.Vector3();
+		const size = new THREE.Vector3();
+		box.getCenter(center);
+		box.getSize(size);
+
+		const pos = {
+			y: -box.min.y,
+            x: -center.x,
+            z: -center.z
+		}
+
+		// увеличиваем
+		shape.scale.x = config.scale;
+		shape.scale.y = config.scale;
+		shape.scale.z = config.scale;
+
+		// центрируем
+		shape.position.y = pos.y * config.scale;
+        shape.position.x = pos.x * config.scale;
+        shape.position.z = pos.z * config.scale;
+
+		// записываем
+		const key = config.link.slice(0, -4);
+		console.log('Модель ' + key + ' выгружена');
+		this._models[key] = shape;
+	}
+
+	_createModelMaterial() {
+		return new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            shininess: 40
+        });
+	}
+
 	_createMaterial() {
 		return new THREE.MeshPhongMaterial({
             color: 0xffffff,
@@ -108,8 +178,7 @@ export default class Manager {
 	_createChunk(params) {
 		const chunkParams = {
 			material: this._material,
-			resolution: 128,
-			noise: this._noise,
+			resolution: 100,
 			...params
 		}
 

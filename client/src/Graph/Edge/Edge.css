@@ -1,0 +1,41 @@
+.edge-container {
+	position: absolute;
+	z-index: 1;
+	height: 20px;
+	margin-top: -10px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+}
+
+.edge {
+	width: 100%;
+	transition: 0.2s ease;
+}
+
+.edge__potential {
+	height: 3px;
+}
+
+.edge__fixed {
+	height: 5px;
+	filter: saturate(200%);
+}
+
+.edge-container:hover > .edge__potential {
+	transform: scale(1, 1.6);
+	filter: saturate(300%);
+}
+
+.edge-container:active > .edge__potential {
+	transform: scale(1, 2);
+}
+
+.edge-container:hover > .edge__fixed {
+	transform: scale(1, 1.4);
+	filter: brightness(80%);
+}
+
+.edge-container:active > .edge__fixed {
+	transform: scale(1, 0.8);
+}

@@ -33,7 +33,7 @@ export default class QuadTree {
 		// нормализуем, поворачиваем и сдвигаем на радиус
 		center.normalize();
 		center.applyMatrix4(this._worldMatrix);
-		center.multiplyScalar(this._radius);
+		center.multiplyScalar(this._radius + 1000);
 
 		return {
 			level,
@@ -42,7 +42,7 @@ export default class QuadTree {
 			center,
 			worldMatrix: this._worldMatrix,
 			radius: this._radius,
-			distance: (this._radius) / (offset.z)
+			distance: this._radius / offset.z
 		}
 	}
 

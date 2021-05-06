@@ -1,8 +1,5 @@
 import React, { PureComponent } from "react";
 import "./Vertex.css";
-import configs from "../../Components/Dialog/configs";
-
-import Loader from "../../Components/Loader/Loader";
 
 class Vertex extends PureComponent {
     constructor(props) {
@@ -11,7 +8,7 @@ class Vertex extends PureComponent {
         this.startPress = this.startPress.bind(this);
         this.endPress = this.endPress.bind(this);
         this.move = this.move.bind(this);
-        this.type = props.config ? props.config.type : 'world'; // shape/place/world
+        this.type = props.config.type; // shape/place/world
     }
 
     startPress(e) {
@@ -22,7 +19,7 @@ class Vertex extends PureComponent {
 
     endPress(e) {
         if (Date.now() - this.startPressTime < 200) {
-            this.props.openShape()
+            this.props.open();
         }
         document.removeEventListener("mouseup", this.endPress);
         document.removeEventListener("mousemove", this.move);
@@ -34,13 +31,11 @@ class Vertex extends PureComponent {
             y: e.clientY,
             x: e.clientX,
         }
-        //this.setState({position});
-        this.props.changeVertex({position});
+        
+        this.props.moving(position);
     }
 
     render() {
-        //const loading = ['new', 'update'].includes(this.props.status);
-
         let style = {
             top: this.props.position.y - this.props.size / 2,
             left: this.props.position.x - this.props.size / 2,
@@ -48,31 +43,25 @@ class Vertex extends PureComponent {
             height: this.props.size,
         };
 
-        if (this.props.text) {
+        if (this.type === 'world') {
             style = {
                 ...style,
-                ...this.props.text.style,
+                ...this.props.config.style,
+                background: this.props.config.color
             };
-            // content = <div style={textStyle}>{this.state.text.caption}</div>
         }
 
-        let imgStyle;
-        if (this.props.config) {
-            imgStyle = {
-                position: "absolute",
-                borderRadius: "50%",
-                width: "100%",
-                height: "100%",
-                zIndex: -1,
-                border: `2px solid ${
-                    configs.styleDialog[this.props.config.settings.style].background
-                }`,
-                backgroundImage: `url(${this.props.config.screenshot})`,
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-            };
-        }
+        const imgStyle = this.type !== 'world' && {
+            position: "absolute",
+            borderRadius: "50%",
+            width: "100%",
+            height: "100%",
+            border: this.props.config.border || `2px solid ${this.props.config.color}`,
+            backgroundImage: `url(${this.props.config.screenshot})`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+        };
 
         return (
             <div
@@ -81,18 +70,7 @@ class Vertex extends PureComponent {
                 onMouseDown={this.startPress}
                 onMouseUp={this.endPress}
             >
-                {/* {loading && (
-                    <Loader
-                        size={this.props.size}
-                        color={
-                            configs.styleDialog[this.props.config.settings.style]
-                                .background
-                        }
-                        opacity="0.8"
-                        weight="10px"
-                    />
-                )} */}
-                {this.props.text && this.props.text.caption}
+                {this.type === 'world' && this.props.config.caption}
                 {imgStyle && <div style={imgStyle}></div>}
             </div>
         );

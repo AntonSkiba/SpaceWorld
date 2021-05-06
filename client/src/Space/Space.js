@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import Planet from './Planet/Planet';
+import Moon from './Planet/Moon';
 
 import Stats from 'three/examples/jsm/libs/stats.module';
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
@@ -17,16 +18,20 @@ import {scattering_shader} from './shaders/scattering';
  * Space - реализует создание отображаемого пространства в контексте THREE.js
  */
 export default class Space {
-	constructor() {
+	constructor(graph, sunSpeed, moonDistance, timeControl) {
 		// контейнер для вставки сцены
 		this._view = null;
 		this._time = 0;
 		this._planetConfig = {
-			seed: 4,
-			biomeSeed: 16,
+			graph,
 			radius: 200000,
 			height: 10000
-		}
+		};
+
+		this._sunSpeed = sunSpeed;
+		this._moonDistance = this._planetConfig.radius + moonDistance;
+		this._timeControl = timeControl;
+		this._moon = null;
 
 		this._startAnimationLoop = this._startAnimationLoop.bind(this);
 	}
@@ -40,29 +45,24 @@ export default class Space {
 		this._sceneSetup();
 		this._lightsSetup();
 		this._planetSetup();
+		this._moonSetup();
 
 		this._startAnimationLoop();
-
-		this._toggleControls = this._toggleControls.bind(this);
-
-		document.addEventListener('keydown', this._toggleControls);
 	}
 
-	_toggleControls(ev) {
-		if (ev.key === 'x') {
-			this._stopControls = !this._stopControls;
-		}
-		
+	toggle() {
+		this._stopControls = !this._stopControls;
 	}
 
 	destroy() {
 		window.cancelAnimationFrame(this._requestID);
-		document.removeEventListener('keydown', this._toggleControls);
 		this._controls.dispose();
 		this._renderer.dispose();
 		this._target.dispose();
 		this._view.removeChild(this._renderer.domElement);
-		
+		if (this._moon && this._moon.created) {
+			this._moon.dispose();
+		}
 	}
 
 	takeScreenshot() {
@@ -113,25 +113,6 @@ export default class Space {
 		scattering.add(this._scatteringConst, 'skyAmtFactorConst', 0, 1, 0.001);
 		scattering.add(this._scatteringConst, 'skyAmtPlusConst', 0, 1, 0.001);
 		scattering.add(this._scatteringConst, 'beConst', 0, 0.0025, 0.000001);
-
-		// в материал:
-		// // constants
-		// referencePlanetRadiusConst: {value: null},
-		// referenceAtmosphereRadiusConst: {value: null},
-		// rayleighScaleConst: {value: null},
-		// mieScaleConst: {value: null},
-		// absorptionHeightMaxConst: {value: null},
-		// absorptionFalloffConst: {value: null},
-		// gConst: {value: null},
-		// sunIntensityConst: {value: null},
-		// skyAmtFactorConst: {value: null},
-		// skyAmtPlusConst: {value: null},
-		// beConst: {value: null},
-		// silhouetteConst: {value: null},
-		// distFactorConst: {value: null},
-		// scaledDistanceToSurfaceConst: {value: null},
-		// scatteringOpacityConst: {value: null}
-
 	}
 
 	_rendererSetup() {
@@ -148,7 +129,7 @@ export default class Space {
 		});
         this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(width, height);
-		this._renderer.shadowMap.enabled = true;
+		//this._renderer.shadowMap.enabled = true;
 		this._renderer.toneMapping = THREE.ACESFilmicToneMapping;
 		this._renderer.autoClear = false;
         this._view.appendChild(this._renderer.domElement);
@@ -160,25 +141,31 @@ export default class Space {
 
 		const fov = 45;
 		const aspect = width/ height;
-		const near = 0.1;
+		const near = 2;
 		const far = 2000000;
 
 		this._camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-		this._camera.position.y = this._planetConfig.radius * 1.4;
+		this._camera.position.y = this._planetConfig.radius * 4;
+		this._camera.lookAt(0, 0, 0);
 
 		this._controls = new ShipControls(this._camera, document, this._planetConfig.radius, this._planetConfig.height);
-		// this._controls.heightCoef = 0.1;
-		// this._controls.heightMax = 500000;
-		// this._controls.heightMin = 203000;
-		// this._controls.heightSpeed = true;
-
-        
 	}
 
 	// создаем сцену
 	_sceneSetup() {
         this._scene = new THREE.Scene();
         this._scene.background = new THREE.Color(0x000012);
+
+		const loader = new THREE.CubeTextureLoader();
+		const texture = loader.load([
+			'skybox/light/front.png',
+			'skybox/light/back.png',
+			'skybox/light/up.png',
+			'skybox/light/down.png',
+			'skybox/light/right.png',
+			'skybox/light/left.png',
+		]);
+		this._scene.background = texture;
 
 		this._stats = new Stats();
 		const renderPass = new RenderPass(this._scene, this._camera);
@@ -206,8 +193,6 @@ export default class Space {
 
 		this._postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-		console.log(WEBGL.isWebGL2Available());
-
 		this._depthPass = new THREE.ShaderMaterial({
 			vertexShader: scattering_shader.VS,
 			fragmentShader: scattering_shader.PS,
@@ -221,7 +206,9 @@ export default class Space {
 				inverseProjection: {value: null},
 				inverseView: {value: null},
 				planetPosition: {value: null},
+				moonPosition: {value: null},
 				planetRadius: {value: null},
+				moonRadius: {value: null},
 				atmosphereRadius: {value: null},
 				lightDir: {value: null},
 				
@@ -240,17 +227,21 @@ export default class Space {
         const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
 
-        this._sun = new THREE.DirectionalLight(0xffffff, 1);
+        this._sun = new THREE.SpotLight(0xffffff, 1);
 
-		this._sun.position.x = this._planetConfig.radius * 1.4;
-		this._sun.position.y = this._planetConfig.radius * 1.4;
+		this._sun.position.x = this._planetConfig.radius;
+		this._sun.position.y = this._planetConfig.radius;
+		this._sun.angle = Math.PI / 3;
 
-        this._sun.castShadow = true;
-        this._sun.shadow.mapSize.width = 16384; // default
-        this._sun.shadow.mapSize.height = 16384; // default
-        this._sun.shadow.camera.near = 0.1;
-        this._sun.shadow.camera.far = 1000000;
-        this._sun.shadow.camera.zoom = 0.001;
+        // this._sun.castShadow = true;
+        // this._sun.shadow.mapSize.width = Math.pow(2, 10); // default
+        // this._sun.shadow.mapSize.height = Math.pow(2, 10); // default
+        // this._sun.shadow.camera.near = 10;
+        // this._sun.shadow.camera.far = 1000000;
+        // this._sun.shadow.camera.zoom = 0.1;
+
+		// const helper = new THREE.CameraHelper( this._sun.shadow.camera );
+		// this._scene.add( helper );
 
         this._sun.add(sunMesh);
         this._scene.add(this._sun);
@@ -261,15 +252,45 @@ export default class Space {
 		this._planet.create();
 	}
 
-	_startAnimationLoop() {
-		this._time += 0.000005;
-        if (this._time > Math.PI*2) {
-            this._time = 0;
-        }
+	_moonSetup() {
+		this._moon = new Moon(this._scene, this._moonDistance, this._planetConfig.graph.tree.moonSeed);
+	}
 
-        this._sun.position.x = Math.sin(this._time) * this._planetConfig.radius * 1.4;
-        this._sun.position.y = Math.cos(this._time) * this._planetConfig.radius * 1.4;
-        this._sun.position.z = Math.cos(this._time) * this._planetConfig.radius * 1.4;
+	acceleration(speed) {
+		this._sunSpeed = speed;
+	}
+
+	moonDistance(distance) {
+		this._moon.changeDistance(this._planetConfig.radius + distance);
+	}
+
+	_startAnimationLoop() {
+		if (!this._stopControls) {
+			this._time += this._sunSpeed * 0.000000005;
+			if (this._time > Math.PI*2) {
+				this._time = 0;
+			}
+		}
+
+		const sunPosition = this._sun.position.clone().normalize();
+		const userPosition = this._camera.position.clone().normalize();
+		const planetPosition = new THREE.Vector3(0, 0, 0);
+
+		const timeType = this._camera.position.distanceTo(planetPosition) < this._planetConfig.radius * 2 ? 'time' : 'phrase';
+		
+		const timeValue = this._time / (2 * Math.PI);
+
+		const localeValue = (userPosition.y + 1) / 2;
+
+		this._timeControl(timeType, timeValue, localeValue);
+
+		if (this._moon.created) {
+			this._moon.update(this._time);
+		}
+
+        this._sun.position.x = Math.sin(this._time) * this._planetConfig.radius * 20;
+        this._sun.position.y = Math.cos(this._time) * this._planetConfig.radius * 20;
+        this._sun.position.z = Math.cos(this._time) * this._planetConfig.radius * 20;
 
 		this._renderer.setRenderTarget(this._target);
 
@@ -289,10 +310,12 @@ export default class Space {
 		this._depthPass.uniforms.cameraFar.value = this._camera.far;
 		this._depthPass.uniforms.cameraPosition.value = this._camera.position;
 		this._depthPass.uniforms.cameraForward.value = forward;
-		this._depthPass.uniforms.planetPosition.value = new THREE.Vector3(0, 0, 0);
+		this._depthPass.uniforms.planetPosition.value = planetPosition;
+		this._depthPass.uniforms.moonPosition.value = this._moon.getPosition();
 		this._depthPass.uniforms.planetRadius.value = 1.0 * this._planet.radius;
+		this._depthPass.uniforms.moonRadius.value = this._moon.radius;
 		this._depthPass.uniforms.atmosphereRadius.value = 1.2 * this._planet.radius;
-		this._depthPass.uniforms.lightDir.value = this._sun.position.clone().normalize();
+		this._depthPass.uniforms.lightDir.value = sunPosition;
 		
 		this._depthPass.uniformsNeedUpdate = true;
 

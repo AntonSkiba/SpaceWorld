@@ -1,14 +1,8 @@
 import Chunk from "./Chunk";
+import * as THREE from "three";
 
 class WorkerThread {
     constructor() {
-        // this._worker = new Worker(s, {type: 'module'});
-        // this._worker.onmessage = (e) => {
-        //     this._onMessage(e);
-        // };
-		// this._worker.onerror = (err) => {
-		// 	console.error(err);
-		// };
         this._resolve = null;
         this._id = Date.now();
     }
@@ -83,15 +77,18 @@ class WorkerThreadPool {
 }
 
 export default class ChunkRebuilderThreaded {
-	constructor () {
+	constructor (models, modelsGroup) {
 		this._pool = [];
 		this._old = [];
 		this._changes = [];
+		this._models = models;
+		this._modelsGroup = modelsGroup;
+		this._modelsLevel = 6;
 
-		// this._workerPool = new WorkerThreadPool(
-		// 	7, './ChunkRebuilderThreaded_worker.js'
-		// );
-		this._workerPool = new WorkerThreadPool(10);
+		this._workerPool = new WorkerThreadPool(100);
+
+		// данные о сгенерированных объектах на участках
+		this._data = {};
 	}
 
 	_onResult(chunk, msg) {
@@ -101,7 +98,30 @@ export default class ChunkRebuilderThreaded {
 
 		const chunkKey = chunk._params.name;
 
-		console.log(chunkKey);
+		console.log('Chunk Info: ');
+		console.log('name: ' + chunkKey);
+		console.log('objects: ' + msg.data.objects.length);
+
+		if (msg.data.objects.length) {
+			this._data[chunkKey] = this._drawModels(msg.data.objects);
+		}
+
+		// Если новый чанк меньше установленного уровня, то находим дочерние чанки с объектами
+		// и удаляем объекты со сцены
+		if (chunk._params.level < this._modelsLevel) {
+			const drawedChunkKeys = Object.keys(this._data);
+			drawedChunkKeys.forEach(drawedKey => {
+				if (drawedKey.includes(chunkKey)) {
+					this._data[drawedKey].forEach(shape => {
+						this._modelsGroup.remove(shape);
+					});
+					this._data[drawedKey] = null;
+					delete this._data[drawedKey];
+				}
+			})
+		}
+
+		//console.log(chunkKey);
 
 		// находим изменение в котором есть загруженный участок
 		for (let c = 0; c < this._changes.length; c++) {
@@ -128,6 +148,33 @@ export default class ChunkRebuilderThreaded {
 		}
 	}
 
+	_drawModels(models) {
+		const shapes = [];
+		
+		models.forEach(model => {
+			const ref = this._models[model.key];
+			const shape = ref && ref.clone();
+
+			if (shape) {
+				shape.position.x = model.position.x;
+				shape.position.y = model.position.y;
+				shape.position.z = model.position.z;
+
+				const axis = shape.position.clone().normalize()
+				const q = new THREE.Quaternion();
+				const ver = new THREE.Vector3(0, 1, 0);
+				q.setFromUnitVectors(ver, axis);
+
+				shape.applyQuaternion(q).rotateOnWorldAxis(axis, model.angle);
+
+				shapes.push(shape);
+				this._modelsGroup.add(shape);
+			}
+		});
+
+		return shapes;
+	}
+
 	allocateChunk(params) {
 		const level = params.level;
 		if (!this._pool[level]) {
@@ -146,21 +193,22 @@ export default class ChunkRebuilderThreaded {
 		chunk.hide();
 
 		const threadedParams = {
+			objects: level === this._modelsLevel && !this._data[params.name],
 			resolution: params.resolution,
 			offset: params.offset,
 			worldMatrix: params.worldMatrix,
 			radius: params.radius,
-			noise: params.noise
-		}
+			level
+		};
 
 		const msg = {
 			subject: 'build_chunk',
 			params: threadedParams
-		}
+		};
 
 		this._workerPool.enqueue(msg, (message) => {
 			this._onResult(chunk, message);
-		})
+		});
 
 		return chunk;
 	}
@@ -177,13 +225,5 @@ export default class ChunkRebuilderThreaded {
 
 	get busy() {
 		return this._workerPool.busy;
-	}
-
-	update() {
-		//console.log(this._changes.length);
-		// if (!this.busy) {
-		// 	this._recycleChunks(this._old);
-		// 	this._old = [];
-		// }
 	}
 }

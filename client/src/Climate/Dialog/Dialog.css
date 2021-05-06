@@ -1,0 +1,112 @@
+.climate-overlay {
+	position: absolute;
+	z-index: 1;
+	top: 20px;
+	left: 20px;
+	width: 100px;
+	height: 100px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 16px;
+	overflow: hidden;
+	transition: 0.2s ease;
+}
+
+.climate {
+	width: 100px;
+	height: 100px;
+	border-radius: 16px;
+	display: flex;
+	flex-direction: column;
+	color: white;
+}
+
+.climate-closed {
+	cursor: pointer;
+}
+
+.climate-closed:hover {
+	filter: saturate(120%);
+	transform: scale(1.1);
+}
+
+.climate-full {
+	transition: 0.2s ease;
+}
+
+.climate-closed .climate-full {
+	display: none;
+}
+
+.climate-body {
+	width: 100px;
+	height: 100px;
+	display: flex;
+	flex-direction: column;
+}
+
+.climate-body__row {
+	margin-bottom: 8px;
+	text-align: center;
+}
+
+.climate-body__image {
+	width: 100%;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-size: cover;
+	transform: scale(1, -1);
+}
+
+.climate-body__image-temperature {
+	display: flex;
+	flex-direction: row;
+	margin-right: 8px;
+}
+
+.climate-body__image-humidity {
+	display: flex;
+	flex-direction: column;
+	margin: 8px 44px 8px 76px;
+}
+
+.climate-body__image-temperature .climate-body__image-name {
+	transform: rotate(-90deg);
+    width: 30px;
+    margin: auto 0;
+	display: flex;
+    justify-content: center;
+}
+
+.climate-body__image-humidity .climate-body__image-name {
+	margin: 8px auto;
+}
+
+.climate-body__image-temperature .climate-body__image-values {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	text-align: end;
+}
+
+.climate-body__image-humidity .climate-body__image-values {
+	display: flex;
+	justify-content: space-around;
+}
+
+.climate-body__image-row {
+	width: 100%;
+	height: 100%;
+	display: flex;
+}
+
+.climate-header {
+	height: 48px;
+	font-size: 20px;
+	font-weight: bold;
+	display: flex;
+    align-items: center;
+    justify-content: center;
+	border-bottom: 1px solid black;
+}

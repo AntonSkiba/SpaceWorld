@@ -1,9 +1,23 @@
 .vertex {
 	position: absolute;
+	z-index: 2;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	user-select: none;
 	border-radius: 50%;
+	transition: transform 0.4s ease;
 	cursor: pointer;
 }
+
+.vertex:hover {
+	transform: scale(1.1);
+}
+
+/* .vertex:active {
+	transform: scale(1.0);
+}
+
+.vertex:focus {
+	transform: scale(0.9);
+} */

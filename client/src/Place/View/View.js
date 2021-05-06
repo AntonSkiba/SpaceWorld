@@ -11,18 +11,21 @@ export default class PlaceView extends PureComponent {
 	constructor(props) {
 		super(props);
 
-		this._settings = props.settings;
+		this._settings = {...props.settings};
 		// просто карта биомов, для 4 соседей и основной зоны
 		this._biomesMap = [
 			[0, 0, 0, 2, 5, 1, 1, 1],
-			[0, 2, 2, 2, 5, 5, 1, 1],
+			[0, 0, 2, 2, 5, 5, 1, 1],
 			[0, 2, 2, 5, 5, 3, 3, 1],
-			[2, 2, 5, 5, 5, 3, 2, 4],
-			[0, 2, 5, 5, 5, 5, 4, 4],
-			[1, 2, 2, 5, 5, 4, 4, 4],
-			[1, 1, 2, 5, 5, 5, 0, 0],
+			[0, 0, 5, 5, 5, 3, 2, 4],
+			[2, 2, 5, 5, 5, 5, 4, 4],
+			[1, 2, 2, 5, 5, 4, 4, 0],
+			[1, 1, 2, 5, 5, 0, 0, 0],
 			[1, 1, 2, 4, 4, 0, 0, 0]
 		];
+
+		this._map = [];
+		this._objects = [];
 
 		this._startAnimationLoop = this._startAnimationLoop.bind(this);
 	}
@@ -31,6 +34,7 @@ export default class PlaceView extends PureComponent {
 		//this._space.create(this._view);
 		this.sceneSetup();
         this.lightsSetup();
+		this.modelsSetup();
 
 		this.updateView(this._settings);
 
@@ -42,18 +46,102 @@ export default class PlaceView extends PureComponent {
         this._controls.dispose();
         this._renderer.dispose();
 		this.placeRemove();
+		this.modelsRemove();
         this._view.removeChild(this._renderer.domElement);
 		this._scene = null;
     }
 
 	updateView(settings) {
-
-		if (settings.zone) {
+		if (settings.zone && settings.zone.key !== this._actualZone) {
+			this._actualZone = settings.zone.key;
 			this._scene.remove(this._place);
 			this.placeSetup(settings.zone);
 		}
 
-		this._settings = settings;
+		this.objectsSetup(settings);
+
+		this._settings = {...settings};
+	}
+
+	objectsSetup(settings) {
+		this._clearObjects();
+
+		const zone = settings.zone.key;
+		const clustering = settings.clustering;
+		const saturation = settings.saturation;
+		const chaotic = settings.chaotic;
+		const fullness = settings.fullness;
+
+		const objectsSeed = zone + settings.zone.heightSeed + clustering;
+		const objectsSimplex = new SimplexNoise(objectsSeed);
+		const simplexHeight = new SimplexNoise(settings.zone.heightSeed);
+
+		const s = 11 - Math.ceil(saturation*10);
+
+		for (let x = 0; x < 500; x+=s) {
+			for (let y = 0; y < 500; y+=s) {
+				// получаем значение шума в зависимости от частоты прямо-пропорциональной значению крастеризации
+				const value = this._getValue(x/500, y/500, objectsSimplex, 30, 1/clustering, 1);
+
+				if (value > 1 - fullness) {
+					if (this._map[x][y].type === zone) {
+						const offset = this._calcOffset(x, y, chaotic, simplexHeight);
+						this._addObject(offset, objectsSimplex);
+					}
+				}
+				
+			}
+		}
+
+		console.log("Place dialog, rerender, params:\nzone - " + zone + ",\nclustering - " + clustering + ",\nsaturation - " + saturation  + ",\nchaotic - " + chaotic + ",\nfullness - " + fullness);
+	}
+
+	// расчитываем позицию объекта
+	_calcOffset(x, y, chaotic, simplex) {
+		const old = this._map[x][y].height;
+		// Расчитываем угол
+		const randomParam = old * 0x131297 % 0xf5abe1;
+		const direction = randomParam - Math.floor(randomParam);
+		const angle = direction * chaotic * Math.PI * 2; // 0 - 2PI
+
+		const pos = {
+			x: x + Math.cos(angle),
+			y: y + Math.sin(angle)
+		};
+
+		const height = this._getValue(pos.x/500, pos.y/500, simplex, 10, 0.5, 2);
+
+		// в контексте трехмерной фигуры x, z - координаты по горизонтали, y - высота
+		return {
+			x: 2 * (pos.y - 250),
+			y: height * 400,
+			z: 2 * (pos.x - 250),
+			angle
+		}
+	}
+
+	_addObject(offset, simplex) {
+		const obj = this._model.clone();
+		this._objects.push(obj);
+		this._scene.add(obj);
+
+		obj.position.x = offset.x;
+		obj.position.y = offset.y;
+		obj.position.z = offset.z;
+
+		obj.scale.x = 4 * this._getValue(offset.x/100, offset.y/100, simplex, 20, 50, 1);
+		obj.scale.y = 4 * this._getValue(offset.y/100, offset.z/100, simplex, 20, 50, 1);
+		obj.scale.z = 4 * this._getValue(offset.z/100, offset.x/100, simplex, 20, 50, 1);
+
+		obj.rotateY(offset.angle);
+	}
+
+	_clearObjects() {
+		const objCount = this._objects.length;
+		for (let i = 0; i < objCount; i++) {
+			const obj = this._objects.pop();
+			this._scene.remove(obj);
+		}
 	}
 
 	sceneSetup() {
@@ -122,10 +210,27 @@ export default class PlaceView extends PureComponent {
         this._scene.add(helperLight);
     }
 
+	modelsSetup() {
+		this._modelGeometry = new THREE.BoxGeometry(3, 6, 3);
+		this._modelMaterial = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+			vertexColors: THREE.VertexColors,
+            shininess: 0.1
+        });
+
+		this._model = new THREE.Mesh(this._modelGeometry, this._modelMaterial);
+	}
+
+	modelsRemove() {
+		this._modelGeometry.dispose();
+		this._modelMaterial.dispose();
+		this._model = null;
+	}
+
 	// максимально прямое и упращенное создание ландшафта просто для создания вершины местности
 	placeSetup(config) {
 		const simplexHeight = new SimplexNoise(config.heightSeed);
-		const simplexBiomes = new SimplexNoise(config.biomeSeed);
+		const simplexHumidity = new SimplexNoise(config.humiditySeed);
 
 		this._material = new THREE.MeshPhongMaterial({
             color: 0xffffff,
@@ -139,16 +244,22 @@ export default class PlaceView extends PureComponent {
 		const colors = [];
 
 		for (let x = 0; x < 500; x++) {
+			this._map[x] = [];
 			for (let y = 0; y < 500; y++) {
 				let height = this._getValue(x/500, y/500, simplexHeight, 10, 0.5, 2);
-				let biome = this._getValue(x/500, y/500, simplexBiomes, 10, 1, 1);
-				let color = this._getColor(height, biome, config.color, config.neighbors);
+				let humidity = this._getValue(x/500, y/500, simplexHumidity, 10, 1, 1);
+				let {key, color} = this._getBiome(height, humidity, config, config.neighbors);
 
 				if (height < 0.1) {
 					height = 0.1;
 				}
+
+				this._map[x].push({
+					height,
+					type: key
+				});
 				
-				colors.push(color.r, color.g, color.b);
+				colors.push(color.r / 255, color.g / 255, color.b / 255);
 				
 				const idx = x*500 + y;
 				position.setZ(idx, height*400);
@@ -170,28 +281,28 @@ export default class PlaceView extends PureComponent {
 		this._scene.remove(this._place);
 		this._material.dispose();
 		this._geometry.dispose();
+		this._map = null;
 		this._place = null;
 	}
 
-	_getColor(height, biome, main, neighbors) {
-		const color = {r: 0, g: 0, b: 0};
-
+	_getBiome(height, humidity, main) {
 		if (height < 0.1) {
-            color.b = height * 6 + biome / 2.5;
+			return {
+				key: 'water',
+				color: {
+					r: 0,
+					g: 0,
+					b: 255 * (height * 6 + humidity / 2.5)
+				}
+			};
         } else {
 			const heightMax = this._biomesMap.length - 1;
 			const biomeMax = this._biomesMap[0].length - 1;
-			const heightIndex = Math.round(height * heightMax);
-			const biomeIndex = Math.round(biome * biomeMax);
+			const heightIndex = Math.round((height - 0.1) / 0.9 * heightMax);
+			const biomeIndex = Math.round(humidity * biomeMax);
 
-			const rgbColor = neighbors[this._biomesMap[heightIndex][biomeIndex]] || main;
-
-			color.r = rgbColor.r / 255;
-            color.g = rgbColor.g / 255;
-            color.b = rgbColor.b / 255;
+			return (main.neighbors[this._biomesMap[heightIndex][biomeIndex]] || main);
 		}
-
-		return color;
 	}
 
 	_getValue(nx, ny, simplex, octaves, freq, flatness) {
@@ -243,7 +354,7 @@ export default class PlaceView extends PureComponent {
         }
 
         this.directionalLight.position.x = Math.sin(time) * 1500;
-        this.directionalLight.position.y = Math.cos(time) * 1000 + 1000;
+        this.directionalLight.position.y = Math.cos(time) * 1000 + 1500;
         this.directionalLight.position.z = Math.cos(time) * 1500;
 
         this._renderer.render(this._scene, this._camera);

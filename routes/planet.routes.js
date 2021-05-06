@@ -6,9 +6,9 @@ const router = Router();
 let planet = null;
 
 router.post("/init", (req, res) => {
-	const {noise, radius, height} = req.body;
+	const {radius, height, graph} = req.body;
 	
-	planet = new Planet(noise, radius, height);
+	planet = new Planet(graph, radius, height);
 	planet.init().then((config) => {
 		res.status(200).json(config);
 	}).catch((err) => {
@@ -22,24 +22,22 @@ router.get("/build", (req, res) => {
 	res.status(200).json(planet.build());
 });
 
+// router.get("/climate", (req, res) => {
+// 	if (!planet) res.status(400).json({err: 'Планета еще не инициализирована'});
+
+// 	planet.climate().then(info => {
+// 		res.status(200).json(info);
+// 	});
+// });
+
+// router
+
 router.post("/chunk", (req, res) => {
 	const {params} = req.body;
-	const data = planet.createChunk(params);
+	const data = planet.chunk(params);
 	
 	res.status(200).json({
 		data
-	});
-});
-
-router.get("/getmap/:side", (req, res) => {
-	const side = req.params.side;
-	if (!side) res.status(400).json({err: 'Не передана сторона, для которой нужно получить карту'});
-	if (!planet) res.status(400).json({err: 'Планета еще не инициализирована'});
-
-	planet.getMap(side).then(map => {
-		res.status(200).json({map});
-	}).catch(err => {
-		res.status(500).json({err});
 	});
 });
 

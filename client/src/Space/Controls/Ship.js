@@ -1,28 +1,19 @@
 import * as THREE from "three";
-// import { Quaternion } from "three";
-// import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 
-// класс - обертка над FirstPersonControls для управления камерой в планетарном масштабе
 export default class ShipControls {
     constructor(camera, domElement, radius, height) {
 		this._camera = camera;
 		this._domElement = domElement;
-		this._size = radius + height;
+		this._size = radius + height/2;
+		this._radius = radius;
 
 		this._speed = {
 			look: 0.1,
-			movement: 10000,
+			movement: 1,
 		};
 
 		this._targetPosition = new THREE.Vector3();
 		
-
-        // this._base = new FirstPersonControls(this._camera, this._domElement);
-        // this._base.lookSpeed = 0.1;
-        // this._base.movementSpeed = this._speed.movement;
-        //this._base.noFly = true;
-
-		// this._base.lookAt(0, 0, 0);
 		this._clock = new THREE.Clock();
 		this._center = new THREE.Vector3(0, 0, 0);
 
@@ -146,7 +137,11 @@ export default class ShipControls {
     update() {
 		const delta = this._clock.getDelta();
 
-		const actualMovementSpeed = delta * this._speed.movement;
+		// коэффициент скорости в зависимости расстояния от планеты
+		let coef = this._camera.position.distanceTo(this._center) - this._radius;
+		coef /= 4;
+
+		const actualMovementSpeed = delta * this._speed.movement * coef;
 		const actualLookSpeed = delta * this._speed.look;
 
 		if (this.move.forward) this._camera.translateZ(-actualMovementSpeed);
@@ -159,39 +154,21 @@ export default class ShipControls {
 		this._lat = Math.max(-85, Math.min(85, this._lat));
 
 		this._lon -= this.mouse.x * actualLookSpeed;
-		// this._lon = 0;
-		// this._lat = -45;
 
 		let phi = THREE.MathUtils.degToRad(90 - this._lat);
 		let theta = THREE.MathUtils.degToRad(this._lon);
 
 		const position = this._camera.position;
-		const forw = position.clone().normalize();
 
-		//const angle = axis.angleTo(new THREE.Vector3(0, 1, 0));
-		//theta += angle;
-		this._targetPosition.setFromSphericalCoords(1, phi, theta).add(position); //.applyAxisAngle(forw, theta);
+		this._targetPosition.setFromSphericalCoords(1, phi, theta);
 
-		// const up = position.clone().normalize();
-		// const targetDir = this._targetPosition.normalize();
-		// const forward = targetDir.add(-up.multiply(targetDir.dot(up)));
-		
-		// const rotation = new Quaternion();
-		// rotation.setFromUnitVectors(forward.normalize(), up.normalize());
-		
-		//this._camera.applyQuaternion(rotation);
+		const q = new THREE.Quaternion();
+		const ver = new THREE.Vector3(0, 1, 0);
+		q.setFromUnitVectors(ver, position.clone().normalize());
 
-		//console.log(this._camera.rotation);
-		
-
-		//this._camera.rotateOnAxis(axis, phi);
+		this._targetPosition.add(position); //.applyAxisAngle(forw, theta);
 
 		this._camera.lookAt(this._targetPosition);
-		//console.log(this._targetPosition);
-		
-		
-		
-		// this._camera.rotateY(theta);
-		//this._base.update(this._clock.getDelta());
+		this._camera.applyQuaternion(q);
 	}
 }

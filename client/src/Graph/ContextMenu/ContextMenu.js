@@ -83,8 +83,12 @@ class ContextMenu extends Component {
                         this.popup = popup;
                     }}>
                     <InputFile caption="Upload 3D model" onChange={this.props.onLoadShape}/>
-                    <Simple onClick={this.props.onCreateSpace} title="Create space for object">
-                        Create space
+                    <Simple onClick={this.props.onCreatePlace} title="Создать место для объектов">
+                        Create place
+                    </Simple>
+
+                    <Simple onClick={this.props.onSaveGraph} title="Сохранить граф">
+                        Save graph
                     </Simple>
                 </div>
             </div>

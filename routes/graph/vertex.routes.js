@@ -5,39 +5,31 @@ const router = Router();
 // сохраняем новую вершину графа
 router.post('/save', (req, res) => {
     console.log('Method: vertex/save');
-    const {name, screenshot, settings, path} = req.body;
-    if (!name) {
-        return res.status(400).json({ message: "Отсутствует имя" });
-    }
+    const config = req.body;
+    const name = config.name;
+    const screenshot = config.screenshot;
 
-    if (!screenshot) {
-        return res.status(400).json({ message: "Отсутствует фоновое изображение" });
-    }
+    config.screenshot = null;
 
-    if (!settings) {
-        return res.status(400).json({ message: "Отсутствуют настройки объекта" });
-    }
-
-    settings.name = name;
-
-    if (!path) {
+    if (!config.path) {
         let dirs = name.split('/');
         dirs = dirs.filter(dir => !!dir.length && dir !== '..');
         dirs.pop();
         dirs.push(`vertex_${Date.now()}`);
     
         makeDirs('../SpaceWorldData/Vertices/configs', dirs).then(genPath => {
-            console.log(genPath);
-            writeConfigs(res, genPath, settings, screenshot);
+            genPath;
+            writeConfigs(res, genPath, config, screenshot);
         });
     } else {
-        writeConfigs(res, `../SpaceWorldData/Vertices/configs${path}`, settings, screenshot);
+        writeConfigs(res, `../SpaceWorldData/Vertices/configs${config.path}`, config, screenshot);
     }
 });
 
-function writeConfigs(res, path, settings, screenshot) {
+function writeConfigs(res, path, config, screenshot) {
     // Сохраняем настройки модели
-    fs.writeFile(`${path}/settings.json`, JSON.stringify(settings, null, 2),"utf8",(err) => {
+    config.path = path.replace('../SpaceWorldData/Vertices/configs', '');
+    fs.writeFile(`${path}/settings.json`, JSON.stringify(config, null, 2),"utf8",(err) => {
         if (err) return fileError(res, err);
         
         // Сохраняем фоновое изображение
@@ -47,7 +39,7 @@ function writeConfigs(res, path, settings, screenshot) {
 
             res.status(201).json({
                 message: "Объект сохранен",
-                path: path.replace('../SpaceWorldData/Vertices/configs', '')
+                path: config.path
             });
         });
     });

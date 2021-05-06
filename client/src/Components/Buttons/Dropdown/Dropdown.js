@@ -26,7 +26,7 @@ class Dropdown extends Component {
 
 	render() {
 		const selected = this.props.selected || this._config[0];
-		const listItems = []; 
+		const listItems = [];
 
 		this._config.forEach(item => {
 			if (item.key !== selected.key) {

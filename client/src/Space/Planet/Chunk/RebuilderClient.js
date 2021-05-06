@@ -49,7 +49,6 @@ export default class RebuilderClient {
 	}
 
 	update() {
-		//console.log(this._queued);
 		if (this._active) {
 			const build = this._active.next();
 			if (build.done) {
@@ -68,9 +67,6 @@ export default class RebuilderClient {
 		}
 
 		if (!this._queued.length) {
-			// if (this._old.length) {
-			// 	console.log(this._old);
-			// }
 			this._recycleChunks(this._old);
 			for (let chunk of this._new) {
 				chunk.show();

@@ -45,7 +45,7 @@
     height: 40px;
     background-repeat: no-repeat;
     background-size: 30px;
-    margin: 5px;
+    background-position: center;
     flex-shrink: 0;
     cursor: pointer;
 	border-radius: 50%;

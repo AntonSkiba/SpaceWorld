@@ -31,6 +31,7 @@ class ShapeDialog extends Component {
             this.firstName = `shapes/${fullName.join(".")}`;
             this.action = "save";
         } else {
+            this._path = props.config.path;
             this.firstName = props.config.name;
             this.firstSettings = props.config.settings;
             this.action = "update";
@@ -119,7 +120,7 @@ class ShapeDialog extends Component {
         }).then(res => {
             return res.json();
         }).then(info => {
-            console.log(info.path);
+            console.log("Shape dialog, vertex saved: " + info.path);
             return info.path;
         });
     }
@@ -173,9 +174,11 @@ class ShapeDialog extends Component {
         };
 
         const config = {
+            path: this._path,
             type: 'shape',
             name: this.state.name,
             screenshot,
+            color: configs.styleDialog[this.state.settings.style].background,
             settings,
         }
 

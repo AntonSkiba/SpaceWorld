@@ -6,7 +6,9 @@ import PlaceView from "../View/View";
 import Loader from "../../Components/Loader/Loader";
 import Dialog from "../../Components/Dialog/Dialog";
 import Dropdown from "../../Components/Buttons/Dropdown/Dropdown";
-import Info from "../../Components/Info/Info";
+import Slider from "../../Components/Buttons/Slider/Slider";
+
+import PlaceInfo from "./PlaceInfo";
 
 class PlaceDialog extends Component {
     constructor(props) {
@@ -21,6 +23,10 @@ class PlaceDialog extends Component {
             this._firstSettings = {
                 style: "space",
                 zone: null,
+                clustering: 0.01,
+                saturation: 0.01,
+                chaotic: 0.00,
+                fullness: 0.01,
                 sunTime: 0,
                 camera: {
                     position: { x: 0, y: 1500, z: 0 },
@@ -45,7 +51,6 @@ class PlaceDialog extends Component {
     }
 
     componentDidMount() {
-        // ПОЛУЧАЕМ ЗОНЫ, ПОТОМ В ЗАВИСИМОСТИ ОТ ТИПА МЕСТНОСТИ СОЗДАЕМ НОВУЮ ИЛИ ЗАГРУЖАЕМ СТАРУЮ
         this._getZones().then(() => {
             this.setState({
                 loadingStatus: null,
@@ -57,19 +62,24 @@ class PlaceDialog extends Component {
                     Math.floor(Math.random() * this.state.zones.length)
                 ];
                 this._changeZone(randomZone);
-                console.log(this.state.zones);
+                console.log("Place dialog, zones loaded: ", this.state.zones);
             }
         });
     }
 
     _updateSettings(settings) {
+        clearTimeout(this._updateTimeout);
         const newSettings = {
             ...this.state.settings,
             ...settings,
         };
 
         if (this._view) {
-            this._view.updateView(newSettings);
+            // ставим небольшую задержку, чтобы изменялись значения после остановки изменения параметров
+            this._updateTimeout = setTimeout(() => {
+                this._view.updateView(newSettings);
+            }, 500);
+            
         }
 
         this.setState({
@@ -89,22 +99,8 @@ class PlaceDialog extends Component {
                 return res.json();
             })
             .then((info) => {
-                const zonesConfig = info.list.map((zone) => {
-                    return {
-                        key: zone.name,
-                        caption: zone.name
-                            .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-                            .toUpperCase(),
-                        title: "информация про зону " + zone.name,
-                        color: zone.color,
-                        style: {
-                            background: `rgba(${zone.color.r},${zone.color.g},${zone.color.b}, 0.4)`,
-                        },
-                    };
-                });
-
                 this.setState({
-                    zones: zonesConfig,
+                    zones: info.list,
                 });
             });
     }
@@ -124,14 +120,12 @@ class PlaceDialog extends Component {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(config),
-        })
-            .then((res) => {
-                return res.json();
-            })
-            .then((info) => {
-                console.log(info.path);
-                return info.path;
-            });
+        }).then((res) => {
+            return res.json();
+        }).then((info) => {
+            console.log("Place dialog, vertex saved: " + info.path);
+            return info.path;
+        });
     }
 
     _saveClick() {
@@ -142,10 +136,13 @@ class PlaceDialog extends Component {
             ...settings,
         };
 
+        const color = this.state.settings.zone.color;
         const config = {
+            path: this.props.config && this.props.config.path,
             type: "place",
             name: this.state.name,
             screenshot,
+            color: `rgb(${color.r}, ${color.g}, ${color.b})`,
             settings,
         };
 
@@ -176,18 +173,22 @@ class PlaceDialog extends Component {
     _changeZone(zone) {
         const neighbors = [];
         zone.heightSeed = Math.random() * 1000;
-        zone.biomeSeed = Math.random() * 1000;
+        zone.humiditySeed = Math.random() * 1000;
 
         for (let i = 0; i < 4; i++) {
             const randomZone = this.state.zones[
                 Math.floor(Math.random() * this.state.zones.length)
             ];
-            neighbors.push(randomZone.color);
+            neighbors.push({
+                key: randomZone.key,
+                caption: randomZone.caption,
+                color: randomZone.color,
+            });
         }
 
         zone.neighbors = neighbors;
 
-        this._updateSettings({ zone });
+        this._updateSettings({ zone });  
     }
 
     render() {
@@ -195,44 +196,6 @@ class PlaceDialog extends Component {
             overlay: configs.styleDialog[this.state.settings.style].overlay,
             dialog: configs.styleDialog[this.state.settings.style].background,
         };
-
-		const infoStyle = {
-			position: 'absolute',
-			top: '60px',
-			left: '10px'
-		};
-
-		const infoContent = this.state.settings.zone ? (
-			<div className="placeDialog-info">
-				Данная панель предназначена для конфигурации вершины местности.<br/><br/>
-				Вы можете сменить имя участка - <span>'{this.state.name.replace('places/', '')}'</span> на любое друго. Через '/' указываются директории для участка<br/><br/>
-				На местности указываются тип биома и параметры распределения моделей.<br/><br/>
-				Например сейчас выбран биом: 
-				<div style={{
-					display: 'inline-block',
-					background: `rgba(${this.state.settings.zone.color.r},${this.state.settings.zone.color.g},${this.state.settings.zone.color.b}, 0.6)`,
-					color: '#ffffff', 
-					borderRadius: '5px',
-					padding: '5px',
-					width: 'fit-content'
-				}} title={this.state.settings.zone.title}>
-					{' ' + this.state.settings.zone.caption}
-				</div><br/>
-				А также параметры:<br/>
-				- Saturation (Насыщенность) - <br/>
-				<span className="placeDialog-info__adding">Выражает насколько плотно зона загружена объектами</span><br/>
-				- Blur (Размытие) - <br/>
-				<span className="placeDialog-info__adding">Выражает насколько сильно будут распределены прикрепленные объекты на соседних зонах</span><br/>
-				- Fullness (Заполнение) - <br/>
-				<span className="placeDialog-info__adding">Выражает вероятность заполнения зон с этим же биомом, по введенным параметрам.<br/>
-					Например: <br/>
-					- 0.01 - заполняется одна зона с данным биомом;<br/>
-					- 1.0 - заполняются все зоны с данным биомом
-				</span><br/><br/>
-				Это означает, что на итоговом ландшафте зоны с выбранным типом биома, будут заполнены прикрепленными объектами c выставленными параметрами.<br/><br/>
-				Сгенерированный участок ландшафта является лишь упращением. Он предназначен для наглядности параметров и не является конечным результатом.<br/><br/>
-			</div>
-		) : <div></div>;
 
         const menu = [
             {
@@ -248,6 +211,54 @@ class PlaceDialog extends Component {
                             selected={this.state.settings.zone}
                             onChange={this._changeZone}
                         />
+                        <Slider
+                            min="0.01"
+                            max="1"
+                            step="0.01"
+                            caption="Clustering"
+                            value={this.state.settings.clustering}
+                            onChange={(e) => {
+                                this._updateSettings({
+                                    clustering: parseFloat(e.target.value),
+                                });
+                            }}
+                        />
+                        <Slider
+                            min="0.01"
+                            max="1"
+                            step="0.01"
+                            caption="Saturation"
+                            value={this.state.settings.saturation}
+                            onChange={(e) => {
+                                this._updateSettings({
+                                    saturation: parseFloat(e.target.value),
+                                });
+                            }}
+                        />
+                        <Slider
+                            min="0.00"
+                            max="1"
+                            step="0.01"
+                            caption="Chaotic"
+                            value={this.state.settings.chaotic}
+                            onChange={(e) => {
+                                this._updateSettings({
+                                    chaotic: parseFloat(e.target.value),
+                                });
+                            }}
+                        />
+                        <Slider
+                            min="0.01"
+                            max="1"
+                            step="0.01"
+                            caption="Fullness"
+                            value={this.state.settings.fullness}
+                            onChange={(e) => {
+                                this._updateSettings({
+                                    fullness: parseFloat(e.target.value),
+                                });
+                            }}
+                        />
                     </div>
                 ),
             },
@@ -262,9 +273,6 @@ class PlaceDialog extends Component {
                 }}
                 header={
                     <input
-                        ref={(input) => {
-                            this.nameInput = input;
-                        }}
                         className="placeDialog-header"
                         onChange={this._changeName}
                         type="text"
@@ -287,10 +295,8 @@ class PlaceDialog extends Component {
                             }}
                         />
                     ) : (
-                        <div style={{width: '100%', height: '100%'}}>
-							<Info 
-								style={infoStyle}
-								content={infoContent}/>
+                        <div style={{ width: "100%", height: "100%" }}>
+                            <PlaceInfo name={this.state.name} settings={this.state.settings}/>
                             <PlaceView
                                 ref={(view) => {
                                     this._view = view;

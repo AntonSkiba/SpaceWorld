@@ -3,28 +3,14 @@ import ChunkManager from './Chunk/Manager';
 
 export default class Planet {
 	constructor(config, scene) {
-		this._noise = {
-			terrain: {
-				seed: config.seed || 16,
-				octaves: 20,
-				frequence: 2,
-				flatness: 3
-			},
-			biomes: {
-				seed: config.biomesSeed || 13,
-				octaves: 16,
-				frequence: 8,
-				flatness: 1
-			}
-		};
-
 		this._scene = scene;
 
 		this._created = false;
 
-		this._lod = 20;
+		this._lod = 40;
 		this._radius = config.radius;
 		this._height = config.height;
+		this._graph = config.graph;
 
 		// стороны планеты
 		this._sides = [];
@@ -42,7 +28,6 @@ export default class Planet {
 
 	async create() {
 		try {
-			// инициализация новой планеты
 			const initConfig = await this._init();
 
 			// записываем стороны
@@ -51,12 +36,10 @@ export default class Planet {
 			// создаем объект для управления участками
 			this._chunkManager = new ChunkManager({
 				sides: this._sides,
-				noise: this._noise,
 				scene: this._scene
 			});
 
-			// построение новой планеты
-			//await this._build();
+			this._chunkManager.downloadModels(this._graph.models);	
 
 			this._created = true;
 
@@ -64,6 +47,9 @@ export default class Planet {
 			for (const side of this._sides) {
 				side.quadTree = new QuadTree(side.name, side.rotation, this._radius, this._lod);
 			}
+
+
+
 		} catch (err) {
 			console.log(err)
 		};
@@ -72,13 +58,13 @@ export default class Planet {
 	update(pos) {
 		if (this._created) {
 			this._chunkManager.update(pos);
-			//this._insert(pos);
 		}
 	}
 
 	// метод отправляет запрос на инициализацию новой планеты
 	// возвращает промис с конфигом новой планеты
 	_init() {
+		console.log('Инициализация новой планеты');
 		return fetch('/api/planet/init', {
 			method: "POST",
 			headers: {
@@ -86,9 +72,9 @@ export default class Planet {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				noise: this._noise,
 				radius: this._radius,
-				height: this._height
+				height: this._height,
+				graph: this._graph
 			})
 		}).then((result) => result.json());
 	}
@@ -98,12 +84,12 @@ export default class Planet {
 			method: "GET"
 		}).then((result) => {
 			return result.json()
-		}).then((config) => {
-			console.log(config.process.build.percent);
-			if (!config.process.build.done) {
+		}).then((build) => {
+			console.log('Построение основного ландшафта: ' + build.percent);
+			if (!build.done) {
 				return this._build();
 			} else {
-				return config;
+				return true;
 			}
 		});
 	}

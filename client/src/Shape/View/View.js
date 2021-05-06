@@ -12,7 +12,7 @@ class ShapeView extends PureComponent {
     constructor(props) {
         super(props);
 
-        this.settings = props.settings;
+        this.settings = {...props.settings};
 
         this._shape = props.shape.clone();
 
@@ -101,26 +101,6 @@ class ShapeView extends PureComponent {
         this.setHelperLight(-1000, 100, 0);
         this.setHelperLight(0, 100, 1000);
         this.setHelperLight(0, 100, -1000);
-
-        // this.ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-        // this._scene.add(this.ambientLight);
-        // const sphere = new THREE.SphereBufferGeometry( 14, 16, 16 );
-
-        // this.light1 = new THREE.PointLight( 0xae24f2, 2, 700 );
-        // this.light1.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xae24f2 } ) ) );
-        // this._scene.add( this.light1 );
-
-        // this.light2 = new THREE.PointLight( 0x2470f2, 2, 700 );
-        // this.light2.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x2470f2 } ) ) );
-        // this._scene.add( this.light2 );
-
-        // this.light3 = new THREE.PointLight( 0xffffff, 2, 700 );
-        // this.light3.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xffffff } ) ) );
-        // this._scene.add( this.light3 );
-
-        // this.light4 = new THREE.PointLight( 0xffffff, 2, 700 );
-        // this.light4.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xffffff } ) ) );
-        // this._scene.add( this.light4 );
     }
 
     setHelperLight(x = 0, y = 0, z = 0, color = 0xffffff, intensity = 0.2) {
@@ -235,10 +215,15 @@ class ShapeView extends PureComponent {
     getConfig() {
         const screenshot = this.takeScreenshot();
 
+        const box = new THREE.Box3().setFromObject(this._shape);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
         return {
             screenshot,
             settings: {
                 sunTime: this.sunTime,
+                size,
                 camera: {
 					position: this._camera.position
 				},
@@ -259,24 +244,8 @@ class ShapeView extends PureComponent {
         }
 
         this.directionalLight.position.x = Math.sin(time) * 1500;
-        this.directionalLight.position.y = Math.cos(time) * 1500;
+        this.directionalLight.position.y = Math.cos(time) * 1000 + 1500;
         this.directionalLight.position.z = Math.cos(time) * 1500;
-
-        // this.light1.position.x = Math.sin( time * 0.7 ) * 300;
-        // this.light1.position.y = Math.cos( time * 0.5 ) * 400;
-        // this.light1.position.z = Math.cos( time * 0.3 ) * 300;
-
-        // this.light2.position.x = Math.cos( time * 0.3 ) * 300;
-        // this.light2.position.y = Math.sin( time * 0.5 ) * 400;
-        // this.light2.position.z = Math.sin( time * 0.7 ) * 300;
-
-        // this.light3.position.x = Math.sin( time * 0.7 ) * 300;
-        // this.light3.position.y = Math.cos( time * 0.3 ) * 400;
-        // this.light3.position.z = Math.sin( time * 0.5 ) * 300;
-
-        // this.light4.position.x = Math.sin( time * 0.3 ) * 300;
-        // this.light4.position.y = Math.cos( time * 0.7 ) * 400;
-        // this.light4.position.z = Math.sin( time * 0.5 ) * 300;
 
         this._renderer.render(this._scene, this._camera);
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
